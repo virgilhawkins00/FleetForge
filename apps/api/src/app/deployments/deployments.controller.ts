@@ -10,26 +10,32 @@ import {
   HttpStatus,
   Patch,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { Permissions, Permission } from '@fleetforge/security';
 import { DeploymentStatus, IDeploymentProgress } from '@fleetforge/core';
 import { DeploymentsService } from './deployments.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { DeploymentResponseDto } from './dto/deployment-response.dto';
 
 @ApiTags('deployments')
+@ApiBearerAuth()
 @Controller({ path: 'deployments', version: '1' })
 export class DeploymentsController {
   constructor(private readonly deploymentsService: DeploymentsService) {}
 
   @Post()
+  @Permissions(Permission.DEPLOYMENT_CREATE)
   @ApiOperation({ summary: 'Create a new deployment' })
   @ApiResponse({ status: 201, description: 'Deployment created', type: DeploymentResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid input' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   async create(@Body() createDeploymentDto: CreateDeploymentDto): Promise<DeploymentResponseDto> {
     return this.deploymentsService.create(createDeploymentDto);
   }
 
   @Get()
+  @Permissions(Permission.DEPLOYMENT_READ)
   @ApiOperation({ summary: 'Get all deployments' })
   @ApiQuery({ name: 'status', required: false, enum: DeploymentStatus })
   @ApiQuery({ name: 'firmwareId', required: false })
@@ -37,6 +43,7 @@ export class DeploymentsController {
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })
   @ApiResponse({ status: 200, description: 'List of deployments', type: [DeploymentResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(
     @Query('status') status?: DeploymentStatus,
     @Query('firmwareId') firmwareId?: string,
@@ -48,49 +55,64 @@ export class DeploymentsController {
   }
 
   @Get('active')
+  @Permissions(Permission.DEPLOYMENT_READ)
   @ApiOperation({ summary: 'Get active deployments' })
   @ApiResponse({ status: 200, description: 'Active deployments', type: [DeploymentResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findActive(): Promise<DeploymentResponseDto[]> {
     return this.deploymentsService.findActive();
   }
 
   @Get('firmware/:firmwareId')
+  @Permissions(Permission.DEPLOYMENT_READ)
   @ApiOperation({ summary: 'Get deployments by firmware' })
   @ApiResponse({ status: 200, description: 'Deployments list', type: [DeploymentResponseDto] })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findByFirmware(@Param('firmwareId') firmwareId: string): Promise<DeploymentResponseDto[]> {
     return this.deploymentsService.findByFirmware(firmwareId);
   }
 
   @Get(':id')
+  @Permissions(Permission.DEPLOYMENT_READ)
   @ApiOperation({ summary: 'Get deployment by ID' })
   @ApiResponse({ status: 200, description: 'Deployment found', type: DeploymentResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async findOne(@Param('id') id: string): Promise<DeploymentResponseDto> {
     return this.deploymentsService.findOne(id);
   }
 
   @Post(':id/start')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
   @ApiOperation({ summary: 'Start deployment' })
   @ApiResponse({ status: 200, description: 'Deployment started', type: DeploymentResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid state transition' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async start(@Param('id') id: string): Promise<DeploymentResponseDto> {
     return this.deploymentsService.start(id);
   }
 
   @Post(':id/cancel')
+  @Permissions(Permission.DEPLOYMENT_CANCEL)
   @ApiOperation({ summary: 'Cancel deployment' })
   @ApiResponse({ status: 200, description: 'Deployment cancelled', type: DeploymentResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid state transition' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async cancel(@Param('id') id: string): Promise<DeploymentResponseDto> {
     return this.deploymentsService.cancel(id);
   }
 
   @Post(':id/rollback')
+  @Permissions(Permission.DEPLOYMENT_ROLLBACK)
   @ApiOperation({ summary: 'Rollback deployment' })
   @ApiResponse({ status: 200, description: 'Deployment rolled back', type: DeploymentResponseDto })
   @ApiResponse({ status: 400, description: 'Invalid state transition' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async rollback(
     @Param('id') id: string,
@@ -100,8 +122,11 @@ export class DeploymentsController {
   }
 
   @Patch(':id/progress')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
   @ApiOperation({ summary: 'Update deployment progress' })
   @ApiResponse({ status: 200, description: 'Progress updated', type: DeploymentResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async updateProgress(
     @Param('id') id: string,
@@ -111,12 +136,14 @@ export class DeploymentsController {
   }
 
   @Delete(':id')
+  @Permissions(Permission.DEPLOYMENT_CANCEL)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Delete deployment' })
   @ApiResponse({ status: 204, description: 'Deployment deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden - insufficient permissions' })
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.deploymentsService.remove(id);
   }
 }
-
