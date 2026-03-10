@@ -1,0 +1,27 @@
+{
+  "name": "@fleetforge/core",
+  "version": "0.1.0",
+  "description": "FleetForge Core - Domain entities, interfaces, and shared types",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "license": "MIT",
+  "keywords": [
+    "iot",
+    "fleet-management",
+    "domain-driven-design",
+    "typescript"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/FleetForge",
+    "directory": "libs/core"
+  },
+  "peerDependencies": {
+    "reflect-metadata": "^0.2.1",
+    "rxjs": "^7.8.1"
+  }
+}
+

@@ -1,0 +1,43 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "declaration": false,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2021",
+    "module": "commonjs",
+    "lib": ["ES2021"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true,
+    "alwaysStrict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@fleetforge/ai": ["libs/ai/src/index.ts"],
+      "@fleetforge/core": ["libs/core/src/index.ts"],
+      "@fleetforge/digital-twin": ["libs/digital-twin/src/index.ts"],
+      "@fleetforge/mqtt-client": ["libs/mqtt-client/src/index.ts"],
+      "@fleetforge/ota": ["libs/ota/src/index.ts"],
+      "@fleetforge/ota-client": ["libs/ota-client/src/index.ts"],
+      "@fleetforge/sdk": ["libs/sdk/src/index.ts"],
+      "@fleetforge/security": ["libs/security/src/index.ts"],
+      "@fleetforge/telemetry": ["libs/telemetry/src/index.ts"],
+      "@fleetforge/testing": ["libs/testing/src/index.ts"]
+    }
+  },
+  "exclude": ["node_modules", "tmp"]
+}

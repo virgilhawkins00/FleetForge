@@ -1,0 +1,20 @@
+{
+  "name": "@fleetforge/digital-twin",
+  "version": "0.1.0",
+  "description": "Digital Twin engine for FleetForge IoT platform",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "keywords": [
+    "iot",
+    "digital-twin",
+    "shadow-state",
+    "state-sync",
+    "device-management"
+  ],
+  "author": "FleetForge Team",
+  "license": "MIT",
+  "peerDependencies": {
+    "@fleetforge/core": "^0.1.0"
+  }
+}
+

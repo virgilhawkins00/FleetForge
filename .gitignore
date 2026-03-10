@@ -1,0 +1,126 @@
+# FleetForge - Enterprise IoT Platform
+# Comprehensive .gitignore for security and best practices
+
+# ============================================
+# SENSITIVE DATA - NEVER COMMIT
+# ============================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.der
+secrets/
+credentials/
+*.secret
+.secrets
+
+# API Keys and Tokens
+**/api-keys.json
+**/tokens.json
+**/*-credentials.json
+
+# ============================================
+# Dependencies
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# ============================================
+# Build Outputs
+# ============================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+tmp/
+temp/
+
+# NX
+.nx/cache
+.nx/workspace-data
+
+# ============================================
+# Testing
+# ============================================
+coverage/
+*.lcov
+.nyc_output/
+test-results/
+junit.xml
+
+# ============================================
+# IDEs and Editors
+# ============================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.sublime-project
+*.sublime-workspace
+
+# ============================================
+# Logs
+# ============================================
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ============================================
+# OS Files
+# ============================================
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# ============================================
+# IoT/OTA Specific
+# ============================================
+# Firmware binaries (should be in artifact storage)
+*.bin
+*.hex
+*.elf
+firmware/builds/
+ota-packages/
+
+# AI/ML Models (should be in model registry)
+*.tflite
+*.onnx
+*.pb
+*.h5
+models/checkpoints/
+
+# Device certificates (should be in secure vault)
+device-certs/
+*.device.pem
+
+# ============================================
+# Database
+# ============================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ============================================
+# Misc
+# ============================================
+.turbo
+.vercel
+.netlify
+

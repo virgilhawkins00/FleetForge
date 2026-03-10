@@ -1,0 +1,28 @@
+{
+  "name": "@fleetforge/ota",
+  "version": "0.1.0",
+  "description": "Over-The-Air update system for FleetForge - Delta updates, deployment strategies, and rollback",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "author": "FleetForge Team",
+  "license": "MIT",
+  "keywords": [
+    "fleetforge",
+    "ota",
+    "firmware",
+    "updates",
+    "delta",
+    "deployment",
+    "rollback",
+    "iot"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/FleetForge.git",
+    "directory": "libs/ota"
+  },
+  "peerDependencies": {
+    "@fleetforge/core": "^0.1.0"
+  }
+}
+
