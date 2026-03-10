@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DatabaseModule } from '@fleetforge/database';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DevicesModule } from './devices/devices.module';
@@ -14,6 +15,13 @@ import { FleetsModule } from './fleets/fleets.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    DatabaseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        uri: configService.get<string>('MONGODB_URI', 'mongodb://localhost:27017/fleetforge'),
+      }),
+    }),
     DevicesModule,
     FirmwareModule,
     DeploymentsModule,
@@ -24,4 +32,3 @@ import { FleetsModule } from './fleets/fleets.module';
   providers: [AppService],
 })
 export class AppModule {}
-

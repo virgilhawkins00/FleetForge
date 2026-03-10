@@ -29,6 +29,7 @@
     "paths": {
       "@fleetforge/ai": ["libs/ai/src/index.ts"],
       "@fleetforge/core": ["libs/core/src/index.ts"],
+      "@fleetforge/database": ["libs/database/src/index.ts"],
       "@fleetforge/digital-twin": ["libs/digital-twin/src/index.ts"],
       "@fleetforge/mqtt-client": ["libs/mqtt-client/src/index.ts"],
       "@fleetforge/ota": ["libs/ota/src/index.ts"],

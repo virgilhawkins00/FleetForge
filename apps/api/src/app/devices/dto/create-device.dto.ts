@@ -1,24 +1,17 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsString,
-  IsNotEmpty,
-  IsObject,
-  IsArray,
-  IsOptional,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsNotEmpty, IsObject, IsArray, IsOptional, IsEnum } from 'class-validator';
 import { DeviceType } from '@fleetforge/core';
 
 export class CreateDeviceDto {
   @ApiProperty({ example: 'fleet-123', description: 'Fleet ID' })
   @IsString()
   @IsNotEmpty()
-  fleetId: string;
+  fleetId!: string;
 
   @ApiProperty({ example: 'Tracker Unit 001', description: 'Device name' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  name!: string;
 
   @ApiProperty({
     enum: DeviceType,
@@ -26,7 +19,7 @@ export class CreateDeviceDto {
     description: 'Device type',
   })
   @IsEnum(DeviceType)
-  type: string;
+  type!: string;
 
   @ApiProperty({
     example: {
@@ -38,7 +31,7 @@ export class CreateDeviceDto {
     description: 'Device metadata',
   })
   @IsObject()
-  metadata: {
+  metadata!: {
     manufacturer: string;
     model: string;
     hardwareVersion: string;
@@ -58,7 +51,7 @@ export class CreateDeviceDto {
     description: 'Device capabilities',
   })
   @IsObject()
-  capabilities: {
+  capabilities!: {
     hasGPS: boolean;
     hasCamera: boolean;
     hasCellular: boolean;
@@ -70,7 +63,7 @@ export class CreateDeviceDto {
   @ApiProperty({ example: '1.0.0', description: 'Firmware version' })
   @IsString()
   @IsNotEmpty()
-  firmwareVersion: string;
+  firmwareVersion!: string;
 
   @ApiProperty({
     example: ['production', 'high-priority'],
@@ -81,4 +74,3 @@ export class CreateDeviceDto {
   @IsOptional()
   tags?: string[];
 }
-

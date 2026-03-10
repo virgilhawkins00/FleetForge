@@ -1,18 +1,18 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Device, DeviceStatus, DeviceType, Location } from '@fleetforge/core';
+import { DeviceRepository } from '@fleetforge/database';
 import { CreateDeviceDto } from './dto/create-device.dto';
 import { UpdateDeviceDto } from './dto/update-device.dto';
 import { DeviceResponseDto } from './dto/device-response.dto';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class DevicesService {
-  // In-memory storage for demonstration
-  // In production, this would be replaced with a repository implementation
-  private devices: Map<string, Device> = new Map();
+  constructor(private readonly deviceRepository: DeviceRepository) {}
 
   async create(createDeviceDto: CreateDeviceDto): Promise<DeviceResponseDto> {
     const device = new Device(
-      this.generateId(),
+      uuidv4(),
       createDeviceDto.fleetId,
       createDeviceDto.name,
       createDeviceDto.type as DeviceType,
@@ -23,8 +23,8 @@ export class DevicesService {
       new Date(),
     );
 
-    this.devices.set(device.id, device);
-    return this.toResponseDto(device);
+    const saved = await this.deviceRepository.create(device);
+    return this.toResponseDto(saved);
   }
 
   async findAll(
@@ -32,23 +32,20 @@ export class DevicesService {
     limit = 100,
     offset = 0,
   ): Promise<DeviceResponseDto[]> {
-    let devices = Array.from(this.devices.values());
+    const devices = await this.deviceRepository.findMany(
+      {
+        fleetId: filter.fleetId,
+        status: filter.status as DeviceStatus,
+      },
+      limit,
+      offset,
+    );
 
-    if (filter.fleetId) {
-      devices = devices.filter((d) => d.fleetId === filter.fleetId);
-    }
-
-    if (filter.status) {
-      devices = devices.filter((d) => d.status === filter.status);
-    }
-
-    return devices
-      .slice(offset, offset + limit)
-      .map((device) => this.toResponseDto(device));
+    return devices.map((device) => this.toResponseDto(device));
   }
 
   async findOne(id: string): Promise<DeviceResponseDto> {
-    const device = this.devices.get(id);
+    const device = await this.deviceRepository.findById(id);
     if (!device) {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
@@ -56,40 +53,34 @@ export class DevicesService {
   }
 
   async update(id: string, updateDeviceDto: UpdateDeviceDto): Promise<DeviceResponseDto> {
-    const device = this.devices.get(id);
-    if (!device) {
+    const existing = await this.deviceRepository.findById(id);
+    if (!existing) {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
 
-    if (updateDeviceDto.name) {
-      device.name = updateDeviceDto.name;
-    }
+    const updates: Partial<Device> = {};
+    if (updateDeviceDto.name) updates.name = updateDeviceDto.name;
+    if (updateDeviceDto.status) updates.status = updateDeviceDto.status as DeviceStatus;
+    if (updateDeviceDto.tags) updates.tags = updateDeviceDto.tags;
+    if (updateDeviceDto.firmwareVersion) updates.firmwareVersion = updateDeviceDto.firmwareVersion;
 
-    if (updateDeviceDto.status) {
-      device.updateStatus(updateDeviceDto.status as DeviceStatus);
-    }
-
-    if (updateDeviceDto.tags) {
-      device.tags = updateDeviceDto.tags;
-    }
-
-    this.devices.set(id, device);
-    return this.toResponseDto(device);
+    const updated = await this.deviceRepository.update(id, updates);
+    return this.toResponseDto(updated);
   }
 
   async remove(id: string): Promise<void> {
-    const device = this.devices.get(id);
+    const device = await this.deviceRepository.findById(id);
     if (!device) {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
-    this.devices.delete(id);
+    await this.deviceRepository.delete(id);
   }
 
   async updateLocation(
     id: string,
     locationData: { latitude: number; longitude: number; altitude?: number },
   ): Promise<DeviceResponseDto> {
-    const device = this.devices.get(id);
+    const device = await this.deviceRepository.findById(id);
     if (!device) {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
@@ -101,9 +92,8 @@ export class DevicesService {
       locationData.altitude,
     );
 
-    device.updateLocation(location);
-    this.devices.set(id, device);
-    return this.toResponseDto(device);
+    const updated = await this.deviceRepository.update(id, { location });
+    return this.toResponseDto(updated);
   }
 
   async updateHealth(
@@ -116,14 +106,21 @@ export class DevicesService {
       cpuUsage?: number;
     },
   ): Promise<DeviceResponseDto> {
-    const device = this.devices.get(id);
+    const device = await this.deviceRepository.findById(id);
     if (!device) {
       throw new NotFoundException(`Device with ID ${id} not found`);
     }
 
     device.updateHealth(health);
-    this.devices.set(id, device);
-    return this.toResponseDto(device);
+    const updated = await this.deviceRepository.update(id, { health: device.health });
+    return this.toResponseDto(updated);
+  }
+
+  async count(filter: { fleetId?: string; status?: string }): Promise<number> {
+    return this.deviceRepository.count({
+      fleetId: filter.fleetId,
+      status: filter.status as DeviceStatus,
+    });
   }
 
   private toResponseDto(device: Device): DeviceResponseDto {
@@ -146,9 +143,4 @@ export class DevicesService {
       updatedAt: device.updatedAt,
     };
   }
-
-  private generateId(): string {
-    return `device-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
 }
-

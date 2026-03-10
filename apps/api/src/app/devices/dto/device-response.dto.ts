@@ -3,22 +3,22 @@ import { DeviceStatus, DeviceType, ILocation, IDeviceHealth } from '@fleetforge/
 
 export class DeviceResponseDto {
   @ApiProperty({ example: 'device-123' })
-  id: string;
+  id!: string;
 
   @ApiProperty({ example: 'fleet-456' })
-  fleetId: string;
+  fleetId!: string;
 
   @ApiProperty({ example: 'Tracker Unit 001' })
-  name: string;
+  name!: string;
 
   @ApiProperty({ enum: DeviceType, example: DeviceType.TRACKER })
-  type: DeviceType;
+  type!: DeviceType;
 
   @ApiProperty({ enum: DeviceStatus, example: DeviceStatus.ACTIVE })
-  status: DeviceStatus;
+  status!: DeviceStatus;
 
   @ApiProperty()
-  metadata: {
+  metadata!: {
     manufacturer: string;
     model: string;
     hardwareVersion: string;
@@ -27,7 +27,7 @@ export class DeviceResponseDto {
   };
 
   @ApiProperty()
-  capabilities: {
+  capabilities!: {
     hasGPS: boolean;
     hasCamera: boolean;
     hasCellular: boolean;
@@ -37,10 +37,10 @@ export class DeviceResponseDto {
   };
 
   @ApiProperty({ example: '1.0.0' })
-  firmwareVersion: string;
+  firmwareVersion!: string;
 
   @ApiProperty()
-  lastSeen: Date;
+  lastSeen!: Date;
 
   @ApiProperty({ required: false })
   location?: ILocation;
@@ -49,18 +49,17 @@ export class DeviceResponseDto {
   health?: IDeviceHealth;
 
   @ApiProperty({ example: ['production'] })
-  tags: string[];
+  tags!: string[];
 
   @ApiProperty({ example: true })
-  isOnline: boolean;
+  isOnline!: boolean;
 
   @ApiProperty({ example: true })
-  isHealthy: boolean;
+  isHealthy!: boolean;
 
   @ApiProperty()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
-  updatedAt: Date;
+  updatedAt!: Date;
 }
-

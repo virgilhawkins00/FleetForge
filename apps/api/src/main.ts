@@ -36,7 +36,7 @@ async function bootstrap(): Promise<void> {
 
   // CORS
   app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
+    origin: process.env['CORS_ORIGIN'] || '*',
     credentials: true,
   });
 
@@ -56,15 +56,16 @@ async function bootstrap(): Promise<void> {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api/docs', app, document);
 
-  const port = process.env.PORT || 3000;
+  const port = process.env['PORT'] || 3000;
   await app.listen(port);
 
+  const nodeEnv = process.env['NODE_ENV'] || 'development';
   console.log(`
   ╔═══════════════════════════════════════════════════════════╗
   ║                                                           ║
   ║   🚀 FleetForge API Server                               ║
   ║                                                           ║
-  ║   Environment: ${process.env.NODE_ENV || 'development'}                              ║
+  ║   Environment: ${nodeEnv}                              ║
   ║   Port:        ${port}                                        ║
   ║   API Docs:    http://localhost:${port}/api/docs              ║
   ║                                                           ║
@@ -73,4 +74,3 @@ async function bootstrap(): Promise<void> {
 }
 
 bootstrap();
-

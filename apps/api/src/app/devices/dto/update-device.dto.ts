@@ -24,5 +24,9 @@ export class UpdateDeviceDto {
   @IsArray()
   @IsOptional()
   tags?: string[];
-}
 
+  @ApiProperty({ example: '2.5.0', required: false })
+  @IsString()
+  @IsOptional()
+  firmwareVersion?: string;
+}
