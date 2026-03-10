@@ -7,4 +7,4 @@ export * from './fleet.repository';
 export * from './firmware.repository';
 export * from './deployment.repository';
 export * from './telemetry.repository';
-
+export * from './user.repository';

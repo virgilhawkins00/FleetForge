@@ -1,5 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Public } from '@fleetforge/security';
 import { AppService } from './app.service';
 
 @ApiTags('health')
@@ -7,6 +8,7 @@ import { AppService } from './app.service';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Public()
   @Get('health')
   @ApiOperation({ summary: 'Health check endpoint' })
   @ApiResponse({ status: 200, description: 'Service is healthy' })
@@ -14,6 +16,7 @@ export class AppController {
     return this.appService.getHealth();
   }
 
+  @Public()
   @Get()
   @ApiOperation({ summary: 'API information' })
   @ApiResponse({ status: 200, description: 'API information' })
@@ -26,4 +29,3 @@ export class AppController {
     return this.appService.getInfo();
   }
 }
-

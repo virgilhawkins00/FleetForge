@@ -45,6 +45,7 @@ async function bootstrap(): Promise<void> {
     .setTitle('FleetForge API')
     .setDescription('Enterprise IoT Fleet Management Platform API')
     .setVersion('1.0')
+    .addTag('auth', 'Authentication endpoints')
     .addTag('devices', 'Device management endpoints')
     .addTag('firmware', 'Firmware management endpoints')
     .addTag('deployments', 'OTA deployment endpoints')

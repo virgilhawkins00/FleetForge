@@ -16,6 +16,8 @@ import {
   DeploymentSchema,
   TelemetryModel,
   TelemetrySchema,
+  UserModel,
+  UserSchema,
 } from './schemas';
 import {
   DeviceRepository,
@@ -23,6 +25,7 @@ import {
   FirmwareRepository,
   DeploymentRepository,
   TelemetryRepository,
+  UserRepository,
 } from './repositories';
 
 export interface DatabaseModuleOptions {
@@ -36,6 +39,7 @@ const SCHEMAS = [
   { name: FirmwareModel.name, schema: FirmwareSchema },
   { name: DeploymentModel.name, schema: DeploymentSchema },
   { name: TelemetryModel.name, schema: TelemetrySchema },
+  { name: UserModel.name, schema: UserSchema },
 ];
 
 const REPOSITORIES = [
@@ -44,6 +48,7 @@ const REPOSITORIES = [
   FirmwareRepository,
   DeploymentRepository,
   TelemetryRepository,
+  UserRepository,
 ];
 
 @Global()
@@ -107,4 +112,3 @@ export class DatabaseModule {
     };
   }
 }
-
