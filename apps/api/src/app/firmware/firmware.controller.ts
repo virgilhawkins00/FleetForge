@@ -10,14 +10,36 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
+  Res,
+  StreamableFile,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiQuery,
+  ApiBearerAuth,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
+import { Response } from 'express';
 import { Permissions, Permission } from '@fleetforge/security';
 import { FirmwareStatus } from '@fleetforge/core';
 import { FirmwareService } from './firmware.service';
 import { CreateFirmwareDto } from './dto/create-firmware.dto';
 import { UpdateFirmwareDto } from './dto/update-firmware.dto';
 import { FirmwareResponseDto } from './dto/firmware-response.dto';
+import {
+  UploadFirmwareDto,
+  FirmwareUploadResponseDto,
+  ValidateFirmwareDto,
+  FirmwareValidationResponseDto,
+} from './dto/upload-firmware.dto';
+import { firmwareMulterOptions } from './config/multer.config';
 
 @ApiTags('firmware')
 @ApiBearerAuth()
@@ -126,5 +148,109 @@ export class FirmwareController {
   @ApiResponse({ status: 404, description: 'Firmware not found' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.firmwareService.remove(id);
+  }
+
+  // ==========================================
+  // File Upload & Download Endpoints
+  // ==========================================
+
+  @Post('upload')
+  @Permissions(Permission.FIRMWARE_WRITE)
+  @UseInterceptors(FileInterceptor('file', firmwareMulterOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload firmware binary file with metadata' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'version', 'name', 'type', 'deviceTypes'],
+      properties: {
+        file: { type: 'string', format: 'binary', description: 'Firmware binary file' },
+        version: { type: 'string', example: '2.5.0' },
+        name: { type: 'string', example: 'Fleet Tracker Firmware' },
+        type: { type: 'string', enum: ['FULL', 'DELTA', 'BOOTLOADER', 'RECOVERY'] },
+        deviceTypes: { type: 'string', example: 'TRACKER,TELEMATICS' },
+        minHardwareVersion: { type: 'string', example: '1.0.0' },
+        maxHardwareVersion: { type: 'string', example: '3.0.0' },
+        releaseNotes: { type: 'string' },
+        skipValidation: { type: 'boolean', default: false },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Firmware uploaded', type: FirmwareUploadResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid file or metadata' })
+  async uploadFirmware(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() uploadDto: UploadFirmwareDto,
+  ): Promise<FirmwareUploadResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Firmware file is required');
+    }
+    return this.firmwareService.uploadFirmware(file, uploadDto);
+  }
+
+  @Post('validate')
+  @Permissions(Permission.FIRMWARE_READ)
+  @UseInterceptors(FileInterceptor('file', firmwareMulterOptions))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Validate firmware file without uploading' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: {
+        file: { type: 'string', format: 'binary' },
+        expectedChecksum: { type: 'string' },
+        signature: { type: 'string' },
+        publicKey: { type: 'string' },
+        signatureAlgorithm: { type: 'string', example: 'RSA-SHA256' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Validation result',
+    type: FirmwareValidationResponseDto,
+  })
+  async validateFirmware(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() validateDto: ValidateFirmwareDto,
+  ): Promise<FirmwareValidationResponseDto> {
+    if (!file) {
+      throw new BadRequestException('Firmware file is required');
+    }
+    return this.firmwareService.validateFirmwareFile(file, validateDto);
+  }
+
+  @Get('download/:key(*)')
+  @Permissions(Permission.FIRMWARE_READ)
+  @ApiOperation({ summary: 'Download firmware binary file' })
+  @ApiResponse({ status: 200, description: 'Firmware file stream' })
+  @ApiResponse({ status: 404, description: 'File not found' })
+  async downloadFirmware(
+    @Param('key') key: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<StreamableFile> {
+    const { buffer, filename, contentType } = await this.firmwareService.downloadFirmware(key);
+
+    res.set({
+      'Content-Type': contentType,
+      'Content-Disposition': `attachment; filename="${filename}"`,
+      'Content-Length': buffer.length,
+    });
+
+    return new StreamableFile(buffer);
+  }
+
+  @Post(':id/revalidate')
+  @Permissions(Permission.FIRMWARE_WRITE)
+  @ApiOperation({ summary: 'Re-validate existing firmware and update status' })
+  @ApiResponse({
+    status: 200,
+    description: 'Revalidation result',
+    type: FirmwareValidationResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'Firmware not found' })
+  async revalidateFirmware(@Param('id') id: string): Promise<FirmwareValidationResponseDto> {
+    return this.firmwareService.revalidateFirmware(id);
   }
 }
