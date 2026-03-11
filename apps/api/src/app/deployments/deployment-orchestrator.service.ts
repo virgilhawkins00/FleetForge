@@ -1,6 +1,7 @@
 /**
  * Deployment Orchestrator Service
  * Core engine for orchestrating firmware deployments across device fleets
+ * Supports advanced deployment strategies: Canary, Rolling, Phased
  */
 
 import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
@@ -11,6 +12,10 @@ import {
   DeviceDeployment,
   DeviceDeploymentStatus,
   IDeploymentProgress,
+  ICanaryConfig,
+  IRollingConfig,
+  IPhasedConfig,
+  IDeploymentWave,
 } from '@fleetforge/core';
 import {
   DeploymentRepository,
@@ -28,6 +33,7 @@ export interface IDeploymentPlan {
   totalDevices: number;
   batches: IDeploymentBatch[];
   strategy: DeploymentStrategy;
+  strategyConfig?: ICanaryConfig | IRollingConfig | IPhasedConfig;
 }
 
 export interface IDeploymentBatch {
@@ -35,6 +41,22 @@ export interface IDeploymentBatch {
   deviceIds: string[];
   scheduledAt?: Date;
   isCanary?: boolean;
+  waveName?: string;
+  delayMinutes?: number;
+  requireApproval?: boolean;
+}
+
+/** Deployment State for tracking phase/batch progress */
+export interface IDeploymentState {
+  currentBatch: number;
+  totalBatches: number;
+  currentWave?: string;
+  canaryCompleted?: boolean;
+  canarySuccessRate?: number;
+  awaitingApproval?: boolean;
+  pausedAt?: Date;
+  lastHealthCheck?: Date;
+  batchFailures: Map<number, number>;
 }
 
 @Injectable()
@@ -322,36 +344,156 @@ export class DeploymentOrchestratorService {
   }
 
   /**
-   * Create deployment batches based on strategy
+   * Create deployment batches based on strategy with advanced configurations
    */
   private createBatches(deployment: Deployment, deviceIds: string[]): IDeploymentBatch[] {
-    const { strategy, canaryPercentage, phaseCount } = deployment.config;
+    const { strategy, canary, rolling, phased } = deployment.config;
+    // Legacy field support
+    const legacyCanaryPct = deployment.config.canaryPercentage;
+    const legacyPhaseCount = deployment.config.phaseCount;
 
     switch (strategy) {
       case DeploymentStrategy.IMMEDIATE:
         return [{ batchNumber: 1, deviceIds }];
 
-      case DeploymentStrategy.CANARY: {
-        const canaryCount = Math.ceil((deviceIds.length * (canaryPercentage ?? 5)) / 100);
-        return [
-          { batchNumber: 1, deviceIds: deviceIds.slice(0, canaryCount), isCanary: true },
-          { batchNumber: 2, deviceIds: deviceIds.slice(canaryCount) },
-        ];
-      }
+      case DeploymentStrategy.CANARY:
+        return this.createCanaryBatches(deviceIds, canary, legacyCanaryPct);
 
       case DeploymentStrategy.ROLLING:
-      case DeploymentStrategy.PHASED: {
-        const phases = phaseCount ?? 5;
-        const batchSize = Math.ceil(deviceIds.length / phases);
-        return Array.from({ length: phases }, (_, i) => ({
-          batchNumber: i + 1,
-          deviceIds: deviceIds.slice(i * batchSize, (i + 1) * batchSize),
-        }));
-      }
+        return this.createRollingBatches(deviceIds, rolling);
+
+      case DeploymentStrategy.PHASED:
+        return this.createPhasedBatches(deviceIds, phased, legacyPhaseCount);
+
+      case DeploymentStrategy.BLUE_GREEN:
+        // Blue-green: all devices in single batch (atomic switch)
+        return [{ batchNumber: 1, deviceIds, waveName: 'Blue-Green Switch' }];
 
       default:
         return [{ batchNumber: 1, deviceIds }];
     }
+  }
+
+  /**
+   * Create batches for Canary deployment strategy
+   */
+  private createCanaryBatches(
+    deviceIds: string[],
+    config?: ICanaryConfig,
+    legacyPct?: number,
+  ): IDeploymentBatch[] {
+    const canaryPct = config?.percentage ?? legacyPct ?? 5;
+    const canaryCount = Math.max(1, Math.ceil((deviceIds.length * canaryPct) / 100));
+    const observationTime = config?.observationTimeMinutes ?? 30;
+
+    return [
+      {
+        batchNumber: 1,
+        deviceIds: deviceIds.slice(0, canaryCount),
+        isCanary: true,
+        waveName: 'Canary',
+        delayMinutes: 0,
+      },
+      {
+        batchNumber: 2,
+        deviceIds: deviceIds.slice(canaryCount),
+        waveName: 'Full Rollout',
+        delayMinutes: observationTime,
+        requireApproval: !(config?.autoPromote ?? true),
+      },
+    ];
+  }
+
+  /**
+   * Create batches for Rolling deployment strategy
+   */
+  private createRollingBatches(deviceIds: string[], config?: IRollingConfig): IDeploymentBatch[] {
+    let batchSize: number;
+
+    if (config?.batchSize) {
+      batchSize = config.batchSize;
+    } else {
+      const percentage = config?.batchPercentage ?? 10;
+      batchSize = Math.max(1, Math.ceil((deviceIds.length * percentage) / 100));
+    }
+
+    const delayMinutes = config?.batchDelayMinutes ?? 5;
+    const batches: IDeploymentBatch[] = [];
+    let batchNum = 1;
+
+    for (let i = 0; i < deviceIds.length; i += batchSize) {
+      batches.push({
+        batchNumber: batchNum,
+        deviceIds: deviceIds.slice(i, i + batchSize),
+        waveName: `Batch ${batchNum}`,
+        delayMinutes: batchNum === 1 ? 0 : delayMinutes,
+      });
+      batchNum++;
+    }
+
+    return batches;
+  }
+
+  /**
+   * Create batches for Phased/Wave deployment strategy
+   */
+  private createPhasedBatches(
+    deviceIds: string[],
+    config?: IPhasedConfig,
+    legacyPhaseCount?: number,
+  ): IDeploymentBatch[] {
+    // Use custom waves if defined
+    if (config?.waves?.length) {
+      return this.createWaveBatches(deviceIds, config.waves);
+    }
+
+    // Otherwise use phaseCount for equal distribution
+    const phases = config?.phaseCount ?? legacyPhaseCount ?? 5;
+    const phaseDelay = config?.phaseDelayMinutes ?? 60;
+    const requireApproval = config?.requireApproval ?? false;
+    const batchSize = Math.ceil(deviceIds.length / phases);
+
+    return Array.from({ length: phases }, (_, i) => ({
+      batchNumber: i + 1,
+      deviceIds: deviceIds.slice(i * batchSize, (i + 1) * batchSize),
+      waveName: `Phase ${i + 1}`,
+      delayMinutes: i === 0 ? 0 : phaseDelay,
+      requireApproval: i > 0 ? requireApproval : false,
+    }));
+  }
+
+  /**
+   * Create batches from custom wave definitions
+   */
+  private createWaveBatches(deviceIds: string[], waves: IDeploymentWave[]): IDeploymentBatch[] {
+    const batches: IDeploymentBatch[] = [];
+    let remaining = [...deviceIds];
+    let batchNum = 1;
+
+    for (const wave of waves) {
+      if (remaining.length === 0) break;
+
+      const count = Math.ceil((remaining.length * wave.percentage) / 100);
+      const waveDevices = remaining.slice(0, count);
+      remaining = remaining.slice(count);
+
+      batches.push({
+        batchNumber: batchNum,
+        deviceIds: waveDevices,
+        waveName: wave.name,
+        delayMinutes: wave.delayMinutes ?? 0,
+        requireApproval: wave.requireApproval ?? false,
+      });
+
+      batchNum++;
+    }
+
+    // Add remaining devices to last batch if any
+    if (remaining.length > 0 && batches.length > 0) {
+      batches[batches.length - 1].deviceIds.push(...remaining);
+    }
+
+    return batches;
   }
 
   /**
@@ -414,7 +556,207 @@ export class DeploymentOrchestratorService {
     });
   }
 
+  /**
+   * Get batch size based on deployment configuration (sync version)
+   */
   private getBatchSize(_deploymentId: string): number {
     return 50; // Default batch size
+  }
+
+  /**
+   * Check if canary phase is healthy and can be promoted
+   */
+  async checkCanaryHealth(deploymentId: string): Promise<{
+    healthy: boolean;
+    successRate: number;
+    canPromote: boolean;
+    reason?: string;
+  }> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    const stats = await this.deviceDeploymentRepo.getStats(deploymentId);
+    const canaryConfig = deployment.config.canary;
+    const threshold = canaryConfig?.successThreshold ?? 95;
+
+    // Calculate success rate for completed canary devices
+    const completed = stats.succeeded + stats.failed;
+    const successRate = completed > 0 ? (stats.succeeded / completed) * 100 : 0;
+
+    const healthy = successRate >= threshold;
+    const canPromote =
+      healthy && (canaryConfig?.autoPromote ?? true) && stats.failed < stats.total * 0.05; // Less than 5% failures
+
+    return {
+      healthy,
+      successRate,
+      canPromote,
+      reason: healthy
+        ? 'Canary health check passed'
+        : `Success rate ${successRate.toFixed(1)}% below threshold ${threshold}%`,
+    };
+  }
+
+  /**
+   * Promote canary deployment to full rollout
+   */
+  async promoteCanary(deploymentId: string): Promise<void> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    if (deployment.config.strategy !== DeploymentStrategy.CANARY) {
+      throw new BadRequestException('Cannot promote non-canary deployment');
+    }
+
+    const health = await this.checkCanaryHealth(deploymentId);
+    if (!health.healthy) {
+      throw new BadRequestException(`Cannot promote: ${health.reason}`);
+    }
+
+    this.logger.log(`Promoting canary deployment ${deploymentId} to full rollout`);
+
+    // Process remaining devices
+    await this.processNextBatch(deploymentId);
+
+    this.eventsGateway.broadcastDeploymentUpdate(deploymentId, {
+      event: 'canary:promoted',
+      successRate: health.successRate,
+    });
+  }
+
+  /**
+   * Pause deployment (useful for rolling/phased strategies)
+   */
+  async pauseDeployment(deploymentId: string): Promise<Deployment> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    if (deployment.status !== DeploymentStatus.IN_PROGRESS) {
+      throw new BadRequestException('Can only pause in-progress deployments');
+    }
+
+    await this.deploymentRepo.update(deploymentId, {
+      status: DeploymentStatus.PENDING, // Use PENDING as paused state
+      updatedAt: new Date(),
+    });
+
+    this.logger.log(`Paused deployment ${deploymentId}`);
+    this.eventsGateway.broadcastDeploymentUpdate(deploymentId, { event: 'deployment:paused' });
+
+    return deployment;
+  }
+
+  /**
+   * Resume a paused deployment
+   */
+  async resumeDeployment(deploymentId: string): Promise<Deployment> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    await this.deploymentRepo.update(deploymentId, {
+      status: DeploymentStatus.IN_PROGRESS,
+      updatedAt: new Date(),
+    });
+
+    // Continue processing
+    await this.processNextBatch(deploymentId);
+
+    this.logger.log(`Resumed deployment ${deploymentId}`);
+    this.eventsGateway.broadcastDeploymentUpdate(deploymentId, { event: 'deployment:resumed' });
+
+    return deployment;
+  }
+
+  /**
+   * Advance to next phase (for phased deployments requiring approval)
+   */
+  async advancePhase(deploymentId: string): Promise<{ phase: number; devicesInPhase: number }> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    if (deployment.config.strategy !== DeploymentStrategy.PHASED) {
+      throw new BadRequestException('advancePhase only applies to phased deployments');
+    }
+
+    const stats = await this.deviceDeploymentRepo.getStats(deploymentId);
+    const phaseConfig = deployment.config.phased;
+    const advanceThreshold = phaseConfig?.advanceThreshold ?? 90;
+
+    // Check if current phase meets threshold
+    const currentSuccessRate =
+      stats.total > 0 ? (stats.succeeded / (stats.succeeded + stats.failed)) * 100 || 0 : 0;
+
+    if (currentSuccessRate < advanceThreshold) {
+      throw new BadRequestException(
+        `Current phase success rate ${currentSuccessRate.toFixed(1)}% below threshold ${advanceThreshold}%`,
+      );
+    }
+
+    // Process next batch
+    await this.processNextBatch(deploymentId);
+
+    const newStats = await this.deviceDeploymentRepo.getStats(deploymentId);
+    const phase = Math.ceil(
+      (newStats.total - newStats.pending) / (newStats.total / (phaseConfig?.phaseCount ?? 5)),
+    );
+
+    this.eventsGateway.broadcastDeploymentUpdate(deploymentId, {
+      event: 'phase:advanced',
+      phase,
+    });
+
+    return {
+      phase,
+      devicesInPhase: newStats.total - newStats.pending - stats.total + stats.pending,
+    };
+  }
+
+  /**
+   * Get detailed deployment status with strategy-specific info
+   */
+  async getDeploymentStatus(deploymentId: string): Promise<{
+    deployment: Deployment;
+    strategy: DeploymentStrategy;
+    currentPhase?: number;
+    totalPhases?: number;
+    canaryHealth?: { healthy: boolean; successRate: number };
+    awaitingApproval: boolean;
+    estimatedCompletion?: Date;
+  }> {
+    const deployment = await this.deploymentRepo.findById(deploymentId);
+    if (!deployment) throw new NotFoundException(`Deployment ${deploymentId} not found`);
+
+    const stats = await this.deviceDeploymentRepo.getStats(deploymentId);
+    const result: {
+      deployment: Deployment;
+      strategy: DeploymentStrategy;
+      currentPhase?: number;
+      totalPhases?: number;
+      canaryHealth?: { healthy: boolean; successRate: number };
+      awaitingApproval: boolean;
+      estimatedCompletion?: Date;
+    } = {
+      deployment,
+      strategy: deployment.config.strategy,
+      awaitingApproval: false,
+    };
+
+    if (deployment.config.strategy === DeploymentStrategy.CANARY) {
+      const health = await this.checkCanaryHealth(deploymentId);
+      result.canaryHealth = { healthy: health.healthy, successRate: health.successRate };
+      result.awaitingApproval =
+        !(deployment.config.canary?.autoPromote ?? true) && health.healthy && stats.pending > 0;
+    }
+
+    if (deployment.config.strategy === DeploymentStrategy.PHASED) {
+      const phaseCount = deployment.config.phased?.phaseCount ?? 5;
+      const processed = stats.total - stats.pending;
+      result.currentPhase = Math.ceil(processed / (stats.total / phaseCount)) || 1;
+      result.totalPhases = phaseCount;
+      result.awaitingApproval =
+        (deployment.config.phased?.requireApproval ?? false) && stats.pending > 0;
+    }
+
+    return result;
   }
 }

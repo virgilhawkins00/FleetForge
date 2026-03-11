@@ -327,4 +327,80 @@ export class DeploymentsController {
   async cancelSchedule(@Param('scheduleId') scheduleId: string): Promise<void> {
     this.schedulerService.cancelSchedule(scheduleId);
   }
+
+  // ===================== Strategy Control Endpoints =====================
+
+  @Get(':id/status')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get detailed deployment status with strategy-specific info' })
+  @ApiResponse({ status: 200, description: 'Deployment status with strategy details' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async getDeploymentStatus(@Param('id') id: string) {
+    return this.orchestratorService.getDeploymentStatus(id);
+  }
+
+  @Post(':id/canary/health')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Check canary deployment health' })
+  @ApiResponse({ status: 200, description: 'Canary health status' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async checkCanaryHealth(@Param('id') id: string) {
+    return this.orchestratorService.checkCanaryHealth(id);
+  }
+
+  @Post(':id/canary/promote')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Promote canary deployment to full rollout' })
+  @ApiResponse({ status: 200, description: 'Canary promoted successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot promote - health check failed or not a canary deployment',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async promoteCanary(@Param('id') id: string): Promise<{ success: boolean }> {
+    await this.orchestratorService.promoteCanary(id);
+    return { success: true };
+  }
+
+  @Post(':id/pause')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Pause a rolling or phased deployment' })
+  @ApiResponse({ status: 200, description: 'Deployment paused', type: DeploymentResponseDto })
+  @ApiResponse({ status: 400, description: 'Cannot pause deployment in current state' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async pauseDeployment(@Param('id') id: string): Promise<DeploymentResponseDto> {
+    const deployment = await this.orchestratorService.pauseDeployment(id);
+    return this.deploymentsService.mapToResponse(deployment);
+  }
+
+  @Post(':id/resume')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Resume a paused deployment' })
+  @ApiResponse({ status: 200, description: 'Deployment resumed', type: DeploymentResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async resumeDeployment(@Param('id') id: string): Promise<DeploymentResponseDto> {
+    const deployment = await this.orchestratorService.resumeDeployment(id);
+    return this.deploymentsService.mapToResponse(deployment);
+  }
+
+  @Post(':id/phase/advance')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({
+    summary: 'Manually advance to next phase (for phased deployments requiring approval)',
+  })
+  @ApiResponse({ status: 200, description: 'Phase advanced' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot advance - threshold not met or not a phased deployment',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async advancePhase(@Param('id') id: string): Promise<{ phase: number; devicesInPhase: number }> {
+    return this.orchestratorService.advancePhase(id);
+  }
 }

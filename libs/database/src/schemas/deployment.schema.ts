@@ -24,6 +24,87 @@ export class DeploymentTargetModel {
 }
 
 @Schema({ _id: false })
+export class CanaryConfigModel {
+  @Prop({ default: 5 })
+  percentage?: number;
+
+  @Prop({ default: 30 })
+  observationTimeMinutes?: number;
+
+  @Prop({ default: 95 })
+  successThreshold?: number;
+
+  @Prop({ default: true })
+  autoPromote?: boolean;
+
+  @Prop({ default: 30 })
+  healthCheckIntervalSeconds?: number;
+}
+
+@Schema({ _id: false })
+export class RollingConfigModel {
+  @Prop()
+  batchSize?: number;
+
+  @Prop({ default: 10 })
+  batchPercentage?: number;
+
+  @Prop({ default: 5 })
+  batchDelayMinutes?: number;
+
+  @Prop({ default: 1 })
+  maxConcurrentBatches?: number;
+
+  @Prop({ default: true })
+  verifyHealthBetweenBatches?: boolean;
+
+  @Prop({ default: true })
+  pauseOnBatchFailure?: boolean;
+
+  @Prop({ default: 10 })
+  batchFailureThreshold?: number;
+}
+
+@Schema({ _id: false })
+export class DeploymentWaveModel {
+  @Prop({ required: true })
+  name!: string;
+
+  @Prop({ required: true })
+  percentage!: number;
+
+  @Prop()
+  delayMinutes?: number;
+
+  @Prop({ default: false })
+  requireApproval?: boolean;
+
+  @Prop({ type: [String] })
+  targetTags?: string[];
+}
+
+@Schema({ _id: false })
+export class PhasedConfigModel {
+  @Prop({ type: [DeploymentWaveModel] })
+  waves?: DeploymentWaveModel[];
+
+  @Prop({ default: 5 })
+  phaseCount?: number;
+
+  @Prop({ default: 60 })
+  phaseDelayMinutes?: number;
+
+  @Prop({ default: false })
+  requireApproval?: boolean;
+
+  @Prop({ default: true })
+  autoAdvance?: boolean;
+
+  @Prop({ default: 90 })
+  advanceThreshold?: number;
+}
+
+@Schema({ _id: false })
 export class DeploymentConfigModel {
   @Prop({ required: true, enum: DeploymentStrategy })
   strategy!: DeploymentStrategy;
@@ -48,6 +129,15 @@ export class DeploymentConfigModel {
 
   @Prop({ default: 10 })
   rollbackThreshold?: number;
+
+  @Prop({ type: CanaryConfigModel })
+  canary?: CanaryConfigModel;
+
+  @Prop({ type: RollingConfigModel })
+  rolling?: RollingConfigModel;
+
+  @Prop({ type: PhasedConfigModel })
+  phased?: PhasedConfigModel;
 }
 
 @Schema({ _id: false })
@@ -118,4 +208,3 @@ export const DeploymentSchema = SchemaFactory.createForClass(DeploymentModel);
 // Indexes
 DeploymentSchema.index({ firmwareId: 1, status: 1 });
 DeploymentSchema.index({ status: 1, startedAt: -1 });
-

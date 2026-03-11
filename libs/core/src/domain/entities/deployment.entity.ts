@@ -11,15 +11,98 @@ export interface IDeploymentTarget {
   percentage?: number;
 }
 
+/**
+ * Canary Strategy Configuration
+ * Controls how canary deployments are executed
+ */
+export interface ICanaryConfig {
+  /** Percentage of devices for canary phase (default: 5%) */
+  percentage?: number;
+  /** Observation time in minutes before promotion (default: 30) */
+  observationTimeMinutes?: number;
+  /** Minimum success rate to promote to full rollout (default: 95%) */
+  successThreshold?: number;
+  /** Auto-promote to full rollout if canary succeeds */
+  autoPromote?: boolean;
+  /** Health check interval in seconds during observation */
+  healthCheckIntervalSeconds?: number;
+}
+
+/**
+ * Rolling Strategy Configuration
+ * Controls batch-based gradual rollouts
+ */
+export interface IRollingConfig {
+  /** Number of devices per batch (default: 10% of total) */
+  batchSize?: number;
+  /** Batch size as percentage (alternative to absolute count) */
+  batchPercentage?: number;
+  /** Delay between batches in minutes (default: 5) */
+  batchDelayMinutes?: number;
+  /** Maximum concurrent batches (default: 1) */
+  maxConcurrentBatches?: number;
+  /** Health verification between batches */
+  verifyHealthBetweenBatches?: boolean;
+  /** Pause deployment if batch failure rate exceeds threshold */
+  pauseOnBatchFailure?: boolean;
+  /** Batch failure threshold percentage (default: 10%) */
+  batchFailureThreshold?: number;
+}
+
+/**
+ * Phased/Wave Strategy Configuration
+ * Controls multi-phase deployments with approval gates
+ */
+export interface IPhasedConfig {
+  /** Wave definitions with percentages */
+  waves?: IDeploymentWave[];
+  /** Default number of phases if waves not specified (default: 5) */
+  phaseCount?: number;
+  /** Delay between phases in minutes (default: 60) */
+  phaseDelayMinutes?: number;
+  /** Require manual approval between phases */
+  requireApproval?: boolean;
+  /** Auto-advance to next phase if success rate met */
+  autoAdvance?: boolean;
+  /** Minimum success rate to advance (default: 90%) */
+  advanceThreshold?: number;
+}
+
+/**
+ * Wave definition for phased deployments
+ */
+export interface IDeploymentWave {
+  /** Wave name (e.g., "Pilot", "Early Adopters", "General") */
+  name: string;
+  /** Percentage of remaining devices */
+  percentage: number;
+  /** Minimum wait time after previous wave in minutes */
+  delayMinutes?: number;
+  /** Require manual approval for this wave */
+  requireApproval?: boolean;
+  /** Target specific tags/groups for this wave */
+  targetTags?: string[];
+}
+
 export interface IDeploymentConfig {
   strategy: DeploymentStrategy;
   target: IDeploymentTarget;
   scheduledAt?: Date;
+  /** @deprecated Use canary.percentage instead */
   canaryPercentage?: number;
+  /** @deprecated Use phased.phaseCount instead */
   phaseCount?: number;
+  /** @deprecated Use phased.phaseDelayMinutes instead */
   phaseDuration?: number; // in minutes
   autoRollback?: boolean;
   rollbackThreshold?: number; // failure percentage
+
+  /** Canary strategy configuration */
+  canary?: ICanaryConfig;
+  /** Rolling strategy configuration */
+  rolling?: IRollingConfig;
+  /** Phased/Wave strategy configuration */
+  phased?: IPhasedConfig;
 }
 
 export interface IDeploymentProgress {
@@ -99,10 +182,7 @@ export class Deployment {
    * Cancel deployment
    */
   cancel(): void {
-    if (
-      this.status !== DeploymentStatus.PENDING &&
-      this.status !== DeploymentStatus.IN_PROGRESS
-    ) {
+    if (this.status !== DeploymentStatus.PENDING && this.status !== DeploymentStatus.IN_PROGRESS) {
       throw new Error(`Cannot cancel deployment with status: ${this.status}`);
     }
 
@@ -183,4 +263,3 @@ export class Deployment {
     };
   }
 }
-
