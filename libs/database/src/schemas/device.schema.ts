@@ -4,7 +4,7 @@
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { DeviceStatus, DeviceType } from '@fleetforge/core';
+import { DeviceStatus, DeviceType, DeviceLifecycleEvent } from '@fleetforge/core';
 
 export type DeviceDocument = HydratedDocument<DeviceModel>;
 
@@ -92,6 +92,45 @@ export class LocationModel {
   timestamp!: Date;
 }
 
+@Schema({ _id: false })
+export class DeviceLifecycleTimestampsModel {
+  @Prop()
+  provisionedAt?: Date;
+
+  @Prop()
+  registeredAt?: Date;
+
+  @Prop()
+  activatedAt?: Date;
+
+  @Prop()
+  suspendedAt?: Date;
+
+  @Prop()
+  decommissionedAt?: Date;
+}
+
+@Schema({ _id: false })
+export class LifecycleHistoryEntryModel {
+  @Prop({ required: true, enum: DeviceLifecycleEvent })
+  event!: DeviceLifecycleEvent;
+
+  @Prop({ required: true, enum: DeviceStatus })
+  fromStatus!: DeviceStatus;
+
+  @Prop({ required: true, enum: DeviceStatus })
+  toStatus!: DeviceStatus;
+
+  @Prop({ required: true })
+  timestamp!: Date;
+
+  @Prop()
+  reason?: string;
+
+  @Prop()
+  performedBy?: string;
+}
+
 @Schema({ collection: 'devices', timestamps: true })
 export class DeviceModel {
   @Prop({ required: true, unique: true })
@@ -130,6 +169,12 @@ export class DeviceModel {
   @Prop({ type: [String], default: [], index: true })
   tags!: string[];
 
+  @Prop({ type: DeviceLifecycleTimestampsModel, default: {} })
+  lifecycleTimestamps!: DeviceLifecycleTimestampsModel;
+
+  @Prop({ type: [LifecycleHistoryEntryModel], default: [] })
+  lifecycleHistory!: LifecycleHistoryEntryModel[];
+
   @Prop()
   createdAt!: Date;
 
@@ -142,3 +187,5 @@ export const DeviceSchema = SchemaFactory.createForClass(DeviceModel);
 // Compound indexes (single-field indexes are defined via @Prop decorator)
 DeviceSchema.index({ fleetId: 1, status: 1 });
 DeviceSchema.index({ firmwareVersion: 1, status: 1 });
+DeviceSchema.index({ 'lifecycleTimestamps.activatedAt': 1 });
+DeviceSchema.index({ 'lifecycleTimestamps.decommissionedAt': 1 });

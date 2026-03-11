@@ -8,6 +8,8 @@ import {
   IDeviceCapabilities,
   IDeviceHealth,
   ILocation,
+  IDeviceLifecycleTimestamps,
+  ILifecycleHistoryEntry,
 } from '@fleetforge/core';
 import { DeviceDocument, DeviceModel } from '../schemas';
 
@@ -56,6 +58,27 @@ export class DeviceMapper {
       sensors: doc.capabilities.sensors,
     };
 
+    const lifecycleTimestamps: IDeviceLifecycleTimestamps = doc.lifecycleTimestamps
+      ? {
+          provisionedAt: doc.lifecycleTimestamps.provisionedAt,
+          registeredAt: doc.lifecycleTimestamps.registeredAt,
+          activatedAt: doc.lifecycleTimestamps.activatedAt,
+          suspendedAt: doc.lifecycleTimestamps.suspendedAt,
+          decommissionedAt: doc.lifecycleTimestamps.decommissionedAt,
+        }
+      : {};
+
+    const lifecycleHistory: ILifecycleHistoryEntry[] = doc.lifecycleHistory
+      ? doc.lifecycleHistory.map((entry) => ({
+          event: entry.event,
+          fromStatus: entry.fromStatus,
+          toStatus: entry.toStatus,
+          timestamp: entry.timestamp,
+          reason: entry.reason,
+          performedBy: entry.performedBy,
+        }))
+      : [];
+
     return new Device(
       doc._id,
       doc.fleetId,
@@ -71,6 +94,8 @@ export class DeviceMapper {
       doc.tags,
       doc.createdAt,
       doc.updatedAt,
+      lifecycleTimestamps,
+      lifecycleHistory,
     );
   }
 
@@ -123,6 +148,8 @@ export class DeviceMapper {
           }
         : undefined,
       tags: entity.tags,
+      lifecycleTimestamps: entity.lifecycleTimestamps || {},
+      lifecycleHistory: entity.lifecycleHistory || [],
       createdAt: entity.createdAt,
       updatedAt: entity.updatedAt,
     };
