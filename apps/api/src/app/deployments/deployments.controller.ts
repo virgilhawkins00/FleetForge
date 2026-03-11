@@ -15,6 +15,7 @@ import { Permissions, Permission } from '@fleetforge/security';
 import { DeploymentStatus, IDeploymentProgress } from '@fleetforge/core';
 import { DeploymentsService } from './deployments.service';
 import { DeploymentOrchestratorService } from './deployment-orchestrator.service';
+import { DeploymentSchedulerService } from './deployment-scheduler.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { DeploymentResponseDto } from './dto/deployment-response.dto';
 import {
@@ -23,6 +24,11 @@ import {
   UpdateDeviceProgressDto,
   RollbackDeploymentDto,
 } from './dto/device-deployment.dto';
+import {
+  ScheduleDeploymentDto,
+  ScheduledDeploymentResponseDto,
+  UpdateScheduleDto,
+} from './dto/schedule-deployment.dto';
 
 @ApiTags('deployments')
 @ApiBearerAuth()
@@ -31,6 +37,7 @@ export class DeploymentsController {
   constructor(
     private readonly deploymentsService: DeploymentsService,
     private readonly orchestratorService: DeploymentOrchestratorService,
+    private readonly schedulerService: DeploymentSchedulerService,
   ) {}
 
   @Post()
@@ -229,5 +236,95 @@ export class DeploymentsController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getStats(@Param('id') id: string): Promise<DeviceDeploymentStatsDto> {
     return this.deploymentsService.getDeploymentStats(id);
+  }
+
+  // ===================== Scheduling Endpoints =====================
+
+  @Post(':id/schedule')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Schedule a deployment for later execution' })
+  @ApiResponse({
+    status: 201,
+    description: 'Deployment scheduled',
+    type: ScheduledDeploymentResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Invalid schedule configuration' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async scheduleDeployment(
+    @Param('id') id: string,
+    @Body() dto: ScheduleDeploymentDto,
+  ): Promise<ScheduledDeploymentResponseDto> {
+    return this.schedulerService.scheduleDeployment(id, dto);
+  }
+
+  @Get(':id/schedules')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get all schedules for a deployment' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of schedules',
+    type: [ScheduledDeploymentResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getSchedules(@Param('id') id: string): Promise<ScheduledDeploymentResponseDto[]> {
+    return this.schedulerService.getSchedulesForDeployment(id);
+  }
+
+  @Get('schedules/active')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get all active scheduled deployments' })
+  @ApiResponse({
+    status: 200,
+    description: 'Active schedules',
+    type: [ScheduledDeploymentResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getActiveSchedules(): Promise<ScheduledDeploymentResponseDto[]> {
+    return this.schedulerService.getAllActiveSchedules();
+  }
+
+  @Get('schedules/:scheduleId')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get a specific schedule' })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule details',
+    type: ScheduledDeploymentResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
+  async getSchedule(
+    @Param('scheduleId') scheduleId: string,
+  ): Promise<ScheduledDeploymentResponseDto> {
+    return this.schedulerService.getSchedule(scheduleId);
+  }
+
+  @Patch('schedules/:scheduleId')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Update a schedule' })
+  @ApiResponse({
+    status: 200,
+    description: 'Schedule updated',
+    type: ScheduledDeploymentResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
+  async updateSchedule(
+    @Param('scheduleId') scheduleId: string,
+    @Body() dto: UpdateScheduleDto,
+  ): Promise<ScheduledDeploymentResponseDto> {
+    return this.schedulerService.updateSchedule(scheduleId, dto);
+  }
+
+  @Delete('schedules/:scheduleId')
+  @Permissions(Permission.DEPLOYMENT_CANCEL)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Cancel a scheduled deployment' })
+  @ApiResponse({ status: 204, description: 'Schedule cancelled' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Schedule not found' })
+  async cancelSchedule(@Param('scheduleId') scheduleId: string): Promise<void> {
+    this.schedulerService.cancelSchedule(scheduleId);
   }
 }

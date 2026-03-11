@@ -79,6 +79,7 @@
     "@nestjs/mongoose": "^10.1.0",
     "@nestjs/platform-express": "^10.3.0",
     "@nestjs/platform-socket.io": "^10.4.22",
+    "@nestjs/schedule": "^6.1.1",
     "@nestjs/swagger": "^7.2.0",
     "@nestjs/websockets": "^10.4.22",
     "bcrypt": "^6.0.0",

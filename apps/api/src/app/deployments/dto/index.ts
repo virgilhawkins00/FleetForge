@@ -5,4 +5,4 @@
 export * from './create-deployment.dto';
 export * from './deployment-response.dto';
 export * from './device-deployment.dto';
-
+export * from './schedule-deployment.dto';
