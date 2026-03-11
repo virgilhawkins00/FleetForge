@@ -8,6 +8,8 @@ import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import {
   DeviceModel,
   DeviceSchema,
+  DeviceShadowModel,
+  DeviceShadowSchema,
   FleetModel,
   FleetSchema,
   FirmwareModel,
@@ -21,6 +23,7 @@ import {
 } from './schemas';
 import {
   DeviceRepository,
+  DeviceShadowRepository,
   FleetRepository,
   FirmwareRepository,
   DeploymentRepository,
@@ -35,6 +38,7 @@ export interface DatabaseModuleOptions {
 
 const SCHEMAS = [
   { name: DeviceModel.name, schema: DeviceSchema },
+  { name: DeviceShadowModel.name, schema: DeviceShadowSchema },
   { name: FleetModel.name, schema: FleetSchema },
   { name: FirmwareModel.name, schema: FirmwareSchema },
   { name: DeploymentModel.name, schema: DeploymentSchema },
@@ -44,6 +48,7 @@ const SCHEMAS = [
 
 const REPOSITORIES = [
   DeviceRepository,
+  DeviceShadowRepository,
   FleetRepository,
   FirmwareRepository,
   DeploymentRepository,

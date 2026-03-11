@@ -23,7 +23,14 @@ import {
   DeviceStatusEventDto,
   SubscribeDeviceDto,
   SubscribeFleetDto,
+  ShadowUpdateReportedDto,
+  ShadowUpdateDesiredDto,
+  ShadowGetDeltaDto,
+  ShadowAckDto,
+  ShadowDeltaEvent,
+  ShadowUpdateEvent,
 } from './dto';
+import { ShadowsService } from '../shadows/shadows.service';
 
 interface AuthenticatedSocket extends Socket {
   user?: IJwtPayload;
@@ -50,6 +57,7 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     private readonly jwtService: JwtService,
     private readonly devicesService: DevicesService,
     private readonly telemetryService: TelemetryService,
+    private readonly shadowsService: ShadowsService,
   ) {}
 
   afterInit(): void {
@@ -194,6 +202,107 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.fleetSubscriptions.get(data.fleetId)?.delete(client.id);
     client.leave(`fleet:${data.fleetId}`);
     return { success: true };
+  }
+
+  // Shadow (Digital Twin) WebSocket handlers
+  @SubscribeMessage('shadow:update:reported')
+  async handleShadowUpdateReported(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: ShadowUpdateReportedDto,
+  ): Promise<{ success: boolean; version: number }> {
+    this.validatePermission(client, Permission.TELEMETRY_WRITE);
+
+    const shadow = await this.shadowsService.updateReported(data.deviceId, { state: data.state });
+
+    // Broadcast shadow update to device subscribers
+    const event: ShadowUpdateEvent = {
+      deviceId: data.deviceId,
+      reported: shadow.state.reported,
+      delta: shadow.state.delta,
+      hasDelta: shadow.hasDelta,
+      version: shadow.version,
+      timestamp: new Date(),
+    };
+    this.server.to(`device:${data.deviceId}`).emit('shadow:update', event);
+
+    // If there's a delta, push it to the device
+    if (shadow.hasDelta) {
+      const deltaEvent: ShadowDeltaEvent = {
+        deviceId: data.deviceId,
+        delta: shadow.state.delta,
+        version: shadow.version,
+        timestamp: new Date(),
+      };
+      this.server.to(`device:${data.deviceId}`).emit('shadow:delta', deltaEvent);
+    }
+
+    return { success: true, version: shadow.version };
+  }
+
+  @SubscribeMessage('shadow:update:desired')
+  async handleShadowUpdateDesired(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: ShadowUpdateDesiredDto,
+  ): Promise<{ success: boolean; version: number }> {
+    this.validatePermission(client, Permission.DEVICE_WRITE);
+
+    const shadow = await this.shadowsService.updateDesired(data.deviceId, { state: data.state });
+
+    // Broadcast shadow update
+    const event: ShadowUpdateEvent = {
+      deviceId: data.deviceId,
+      desired: shadow.state.desired,
+      delta: shadow.state.delta,
+      hasDelta: shadow.hasDelta,
+      version: shadow.version,
+      timestamp: new Date(),
+    };
+    this.server.to(`device:${data.deviceId}`).emit('shadow:update', event);
+
+    // Push delta to device (device needs to apply changes)
+    if (shadow.hasDelta) {
+      const deltaEvent: ShadowDeltaEvent = {
+        deviceId: data.deviceId,
+        delta: shadow.state.delta,
+        version: shadow.version,
+        timestamp: new Date(),
+      };
+      this.server.to(`device:${data.deviceId}`).emit('shadow:delta', deltaEvent);
+    }
+
+    return { success: true, version: shadow.version };
+  }
+
+  @SubscribeMessage('shadow:get:delta')
+  async handleShadowGetDelta(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: ShadowGetDeltaDto,
+  ): Promise<{ delta: Record<string, unknown>; hasDelta: boolean }> {
+    this.validatePermission(client, Permission.DEVICE_READ);
+
+    const delta = await this.shadowsService.getDelta(data.deviceId);
+    const hasDelta = Object.keys(delta).length > 0;
+
+    return { delta, hasDelta };
+  }
+
+  @SubscribeMessage('shadow:ack')
+  async handleShadowAck(
+    @ConnectedSocket() client: AuthenticatedSocket,
+    @MessageBody() data: ShadowAckDto,
+  ): Promise<{ success: boolean; version: number }> {
+    this.validatePermission(client, Permission.TELEMETRY_WRITE);
+
+    const shadow = await this.shadowsService.markSynced(data.deviceId);
+
+    // Broadcast sync confirmation
+    this.server.to(`device:${data.deviceId}`).emit('shadow:synced', {
+      deviceId: data.deviceId,
+      version: shadow.version,
+      timestamp: new Date(),
+    });
+
+    return { success: true, version: shadow.version };
   }
 
   // Public methods for broadcasting from other services

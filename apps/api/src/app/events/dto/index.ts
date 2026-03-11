@@ -2,7 +2,15 @@
  * WebSocket Event DTOs
  */
 
-import { IsString, IsNumber, IsOptional, IsObject, ValidateNested, Min, Max } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsObject,
+  ValidateNested,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class LocationDto {
@@ -84,3 +92,46 @@ export interface WsErrorResponse {
   };
 }
 
+// Shadow (Digital Twin) Events
+export class ShadowUpdateReportedDto {
+  @IsString()
+  deviceId!: string;
+
+  @IsObject()
+  state!: Record<string, unknown>;
+}
+
+export class ShadowUpdateDesiredDto {
+  @IsString()
+  deviceId!: string;
+
+  @IsObject()
+  state!: Record<string, unknown>;
+}
+
+export class ShadowGetDeltaDto {
+  @IsString()
+  deviceId!: string;
+}
+
+export class ShadowAckDto {
+  @IsString()
+  deviceId!: string;
+}
+
+export interface ShadowDeltaEvent {
+  deviceId: string;
+  delta: Record<string, unknown>;
+  version: number;
+  timestamp: Date;
+}
+
+export interface ShadowUpdateEvent {
+  deviceId: string;
+  reported?: Record<string, unknown>;
+  desired?: Record<string, unknown>;
+  delta: Record<string, unknown>;
+  hasDelta: boolean;
+  version: number;
+  timestamp: Date;
+}
