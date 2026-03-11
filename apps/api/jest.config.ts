@@ -10,4 +10,11 @@ export default {
   coverageDirectory: '../../coverage/apps/api',
   testMatch: ['**/*.spec.ts', '**/*.e2e-spec.ts'],
   testTimeout: 30000,
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.e2e-spec.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/test/**',
+    '!src/main.ts',
+  ],
 };
