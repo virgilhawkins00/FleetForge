@@ -43,7 +43,7 @@ describe('Devices E2E - Protected Routes', () => {
           inject: [ConfigService],
           useFactory: () => ({
             jwt: {
-              secret: 'test-secret-key',
+              secret: process.env['TEST_JWT_SECRET'] || 'e2e-testing-only-not-for-production',
               accessTokenExpiration: '15m',
               refreshTokenExpiration: '7d',
             },
