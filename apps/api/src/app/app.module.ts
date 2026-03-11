@@ -13,6 +13,7 @@ import { TelemetryModule } from './telemetry/telemetry.module';
 import { FleetsModule } from './fleets/fleets.module';
 import { EventsModule } from './events/events.module';
 import { ShadowsModule } from './shadows/shadows.module';
+import { FleetOperationsModule } from './fleet-operations/fleet-operations.module';
 
 @Module({
   imports: [
@@ -45,6 +46,7 @@ import { ShadowsModule } from './shadows/shadows.module';
     FleetsModule,
     EventsModule,
     ShadowsModule,
+    FleetOperationsModule,
   ],
   controllers: [AppController],
   providers: [

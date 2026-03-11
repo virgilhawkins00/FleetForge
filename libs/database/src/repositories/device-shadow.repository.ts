@@ -140,5 +140,71 @@ export class DeviceShadowRepository {
     }
     return shadow;
   }
-}
 
+  /**
+   * Find shadows by multiple device IDs
+   */
+  async findByDeviceIds(deviceIds: string[]): Promise<DeviceShadow[]> {
+    const docs = await this.shadowModel.find({ deviceId: { $in: deviceIds } }).exec();
+    return docs.map(DeviceShadowMapper.toDomain);
+  }
+
+  /**
+   * Batch update desired state for multiple devices
+   */
+  async batchUpdateDesired(
+    deviceIds: string[],
+    state: Record<string, unknown>,
+  ): Promise<{ updated: number; created: number }> {
+    // First, update existing shadows
+    const updateResult = await this.shadowModel
+      .updateMany(
+        { deviceId: { $in: deviceIds } },
+        {
+          $set: {
+            'state.desired': state,
+            hasDelta: true,
+            lastDesiredAt: new Date(),
+            updatedAt: new Date(),
+          },
+          $inc: { version: 1 },
+        },
+      )
+      .exec();
+
+    // Find which device IDs don't have shadows yet
+    const existingShadows = await this.shadowModel
+      .find({ deviceId: { $in: deviceIds } })
+      .select('deviceId')
+      .exec();
+    const existingIds = new Set(existingShadows.map((s) => s.deviceId));
+    const missingIds = deviceIds.filter((id) => !existingIds.has(id));
+
+    // Create shadows for missing devices
+    if (missingIds.length > 0) {
+      const newShadows = missingIds.map((deviceId) => ({
+        _id: `shadow-${deviceId}`,
+        deviceId,
+        state: { reported: {}, desired: state, delta: state },
+        hasDelta: true,
+        version: 1,
+        lastDesiredAt: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+      await this.shadowModel.insertMany(newShadows);
+    }
+
+    return {
+      updated: updateResult.modifiedCount,
+      created: missingIds.length,
+    };
+  }
+
+  /**
+   * Count shadows by fleet (requires join with devices)
+   */
+  async countByDeviceIds(deviceIds: string[]): Promise<number> {
+    return this.shadowModel.countDocuments({ deviceId: { $in: deviceIds } }).exec();
+  }
+}
