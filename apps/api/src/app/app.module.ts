@@ -11,6 +11,7 @@ import { FirmwareModule } from './firmware/firmware.module';
 import { DeploymentsModule } from './deployments/deployments.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { FleetsModule } from './fleets/fleets.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { FleetsModule } from './fleets/fleets.module';
     DeploymentsModule,
     TelemetryModule,
     FleetsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [
