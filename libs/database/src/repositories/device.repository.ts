@@ -22,11 +22,7 @@ export class DeviceRepository implements IDeviceRepository {
     return doc ? DeviceMapper.toDomain(doc) : null;
   }
 
-  async findMany(
-    filter: IDeviceFilter,
-    limit = 100,
-    offset = 0,
-  ): Promise<Device[]> {
+  async findMany(filter: IDeviceFilter, limit = 100, offset = 0): Promise<Device[]> {
     const query = this.buildQuery(filter);
     const docs = await this.deviceModel
       .find(query)
@@ -38,10 +34,7 @@ export class DeviceRepository implements IDeviceRepository {
   }
 
   async findByFleetId(fleetId: string): Promise<Device[]> {
-    const docs = await this.deviceModel
-      .find({ fleetId })
-      .sort({ name: 1 })
-      .exec();
+    const docs = await this.deviceModel.find({ fleetId }).sort({ name: 1 }).exec();
     return docs.map(DeviceMapper.toDomain);
   }
 
@@ -54,10 +47,11 @@ export class DeviceRepository implements IDeviceRepository {
 
   async update(id: string, device: Partial<Device>): Promise<Device> {
     const updateData: Record<string, unknown> = {};
-    
+
     if (device.name !== undefined) updateData['name'] = device.name;
     if (device.status !== undefined) updateData['status'] = device.status;
-    if (device.firmwareVersion !== undefined) updateData['firmwareVersion'] = device.firmwareVersion;
+    if (device.firmwareVersion !== undefined)
+      updateData['firmwareVersion'] = device.firmwareVersion;
     if (device.lastSeen !== undefined) updateData['lastSeen'] = device.lastSeen;
     if (device.location !== undefined) updateData['location'] = device.location;
     if (device.health !== undefined) updateData['health'] = device.health;
@@ -67,7 +61,7 @@ export class DeviceRepository implements IDeviceRepository {
     const doc = await this.deviceModel
       .findByIdAndUpdate(id, { $set: updateData }, { new: true })
       .exec();
-    
+
     if (!doc) {
       throw new Error(`Device not found: ${id}`);
     }
@@ -93,15 +87,14 @@ export class DeviceRepository implements IDeviceRepository {
     return docs.map(DeviceMapper.toDomain);
   }
 
-  async bulkUpdateStatus(
-    deviceIds: string[],
-    status: DeviceStatus,
-  ): Promise<number> {
+  async findByTags(tags: string[]): Promise<Device[]> {
+    const docs = await this.deviceModel.find({ tags: { $all: tags } }).exec();
+    return docs.map(DeviceMapper.toDomain);
+  }
+
+  async bulkUpdateStatus(deviceIds: string[], status: DeviceStatus): Promise<number> {
     const result = await this.deviceModel
-      .updateMany(
-        { _id: { $in: deviceIds } },
-        { $set: { status, updatedAt: new Date() } },
-      )
+      .updateMany({ _id: { $in: deviceIds } }, { $set: { status, updatedAt: new Date() } })
       .exec();
     return result.modifiedCount;
   }
@@ -137,4 +130,3 @@ export class DeviceRepository implements IDeviceRepository {
     return query;
   }
 }
-

@@ -14,14 +14,24 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery, ApiBearerAuth } from '@ne
 import { Permissions, Permission } from '@fleetforge/security';
 import { DeploymentStatus, IDeploymentProgress } from '@fleetforge/core';
 import { DeploymentsService } from './deployments.service';
+import { DeploymentOrchestratorService } from './deployment-orchestrator.service';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { DeploymentResponseDto } from './dto/deployment-response.dto';
+import {
+  DeviceDeploymentResponseDto,
+  DeviceDeploymentStatsDto,
+  UpdateDeviceProgressDto,
+  RollbackDeploymentDto,
+} from './dto/device-deployment.dto';
 
 @ApiTags('deployments')
 @ApiBearerAuth()
 @Controller({ path: 'deployments', version: '1' })
 export class DeploymentsController {
-  constructor(private readonly deploymentsService: DeploymentsService) {}
+  constructor(
+    private readonly deploymentsService: DeploymentsService,
+    private readonly orchestratorService: DeploymentOrchestratorService,
+  ) {}
 
   @Post()
   @Permissions(Permission.DEPLOYMENT_CREATE)
@@ -145,5 +155,79 @@ export class DeploymentsController {
   @ApiResponse({ status: 404, description: 'Deployment not found' })
   async remove(@Param('id') id: string): Promise<void> {
     return this.deploymentsService.remove(id);
+  }
+
+  // ===================== Orchestrator Endpoints =====================
+
+  @Post(':id/orchestrate')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Create deployment plan and initialize device deployments' })
+  @ApiResponse({ status: 200, description: 'Deployment plan created' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async createPlan(@Param('id') id: string) {
+    return this.orchestratorService.createDeploymentPlan(id);
+  }
+
+  @Post(':id/execute')
+  @Permissions(Permission.DEPLOYMENT_CREATE)
+  @ApiOperation({ summary: 'Execute a prepared deployment' })
+  @ApiResponse({ status: 200, description: 'Deployment started', type: DeploymentResponseDto })
+  @ApiResponse({ status: 400, description: 'Invalid state' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async execute(@Param('id') id: string): Promise<DeploymentResponseDto> {
+    const deployment = await this.orchestratorService.startDeployment(id);
+    return this.deploymentsService.mapToResponse(deployment);
+  }
+
+  @Post(':id/orchestrate-rollback')
+  @Permissions(Permission.DEPLOYMENT_ROLLBACK)
+  @ApiOperation({ summary: 'Rollback deployment with orchestration' })
+  @ApiResponse({ status: 200, description: 'Deployment rolled back', type: DeploymentResponseDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Deployment not found' })
+  async orchestrateRollback(
+    @Param('id') id: string,
+    @Body() dto: RollbackDeploymentDto,
+  ): Promise<DeploymentResponseDto> {
+    const deployment = await this.orchestratorService.rollbackDeployment(id, dto.reason);
+    return this.deploymentsService.mapToResponse(deployment);
+  }
+
+  @Patch(':id/devices/:deviceId/progress')
+  @Permissions(Permission.TELEMETRY_WRITE)
+  @ApiOperation({ summary: 'Update device deployment progress' })
+  @ApiResponse({ status: 200, description: 'Progress updated' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async updateDeviceProgress(
+    @Param('id') deploymentId: string,
+    @Param('deviceId') deviceId: string,
+    @Body() dto: UpdateDeviceProgressDto,
+  ): Promise<{ success: boolean }> {
+    await this.orchestratorService.updateDeviceProgress(deploymentId, deviceId, dto);
+    return { success: true };
+  }
+
+  @Get(':id/devices')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get device deployments for a deployment' })
+  @ApiResponse({
+    status: 200,
+    description: 'Device deployments list',
+    type: [DeviceDeploymentResponseDto],
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getDeviceDeployments(@Param('id') id: string): Promise<DeviceDeploymentResponseDto[]> {
+    return this.deploymentsService.getDeviceDeployments(id);
+  }
+
+  @Get(':id/stats')
+  @Permissions(Permission.DEPLOYMENT_READ)
+  @ApiOperation({ summary: 'Get deployment statistics' })
+  @ApiResponse({ status: 200, description: 'Deployment stats', type: DeviceDeploymentStatsDto })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getStats(@Param('id') id: string): Promise<DeviceDeploymentStatsDto> {
+    return this.deploymentsService.getDeploymentStats(id);
   }
 }

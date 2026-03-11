@@ -10,6 +10,8 @@ import {
   DeviceSchema,
   DeviceShadowModel,
   DeviceShadowSchema,
+  DeviceDeploymentModel,
+  DeviceDeploymentSchema,
   FleetModel,
   FleetSchema,
   FirmwareModel,
@@ -24,6 +26,7 @@ import {
 import {
   DeviceRepository,
   DeviceShadowRepository,
+  DeviceDeploymentRepository,
   FleetRepository,
   FirmwareRepository,
   DeploymentRepository,
@@ -39,6 +42,7 @@ export interface DatabaseModuleOptions {
 const SCHEMAS = [
   { name: DeviceModel.name, schema: DeviceSchema },
   { name: DeviceShadowModel.name, schema: DeviceShadowSchema },
+  { name: DeviceDeploymentModel.name, schema: DeviceDeploymentSchema },
   { name: FleetModel.name, schema: FleetSchema },
   { name: FirmwareModel.name, schema: FirmwareSchema },
   { name: DeploymentModel.name, schema: DeploymentSchema },
@@ -49,6 +53,7 @@ const SCHEMAS = [
 const REPOSITORIES = [
   DeviceRepository,
   DeviceShadowRepository,
+  DeviceDeploymentRepository,
   FleetRepository,
   FirmwareRepository,
   DeploymentRepository,

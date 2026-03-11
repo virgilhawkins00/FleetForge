@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { Deployment, DeploymentStatus, IDeploymentProgress } from '@fleetforge/core';
-import { DeploymentRepository } from '@fleetforge/database';
+import { DeploymentRepository, DeviceDeploymentRepository } from '@fleetforge/database';
 import { CreateDeploymentDto } from './dto/create-deployment.dto';
 import { DeploymentResponseDto } from './dto/deployment-response.dto';
+import { DeviceDeploymentResponseDto, DeviceDeploymentStatsDto } from './dto/device-deployment.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class DeploymentsService {
-  constructor(private readonly deploymentRepository: DeploymentRepository) {}
+  constructor(
+    private readonly deploymentRepository: DeploymentRepository,
+    private readonly deviceDeploymentRepository: DeviceDeploymentRepository,
+  ) {}
 
   async create(createDeploymentDto: CreateDeploymentDto): Promise<DeploymentResponseDto> {
     const initialProgress: IDeploymentProgress = {
@@ -142,6 +146,43 @@ export class DeploymentsService {
       throw new NotFoundException(`Deployment with ID ${id} not found`);
     }
     await this.deploymentRepository.delete(id);
+  }
+
+  /**
+   * Get device deployments for a deployment
+   */
+  async getDeviceDeployments(deploymentId: string): Promise<DeviceDeploymentResponseDto[]> {
+    const deviceDeployments = await this.deviceDeploymentRepository.findByDeployment(deploymentId);
+    return deviceDeployments.map((dd) => ({
+      id: dd.id,
+      deploymentId: dd.deploymentId,
+      deviceId: dd.deviceId,
+      firmwareId: dd.firmwareId,
+      status: dd.status,
+      previousFirmwareVersion: dd.previousFirmwareVersion ?? undefined,
+      targetFirmwareVersion: dd.targetFirmwareVersion,
+      progress: dd.progress,
+      metrics: dd.metrics,
+      errors: dd.errors,
+      createdAt: dd.createdAt,
+      updatedAt: dd.updatedAt,
+      completedAt: dd.completedAt,
+      rollbackReason: dd.rollbackReason,
+    }));
+  }
+
+  /**
+   * Get deployment statistics
+   */
+  async getDeploymentStats(deploymentId: string): Promise<DeviceDeploymentStatsDto> {
+    return this.deviceDeploymentRepository.getStats(deploymentId);
+  }
+
+  /**
+   * Map deployment entity to response DTO (public)
+   */
+  mapToResponse(deployment: Deployment): DeploymentResponseDto {
+    return this.toResponseDto(deployment);
   }
 
   private toResponseDto(deployment: Deployment): DeploymentResponseDto {

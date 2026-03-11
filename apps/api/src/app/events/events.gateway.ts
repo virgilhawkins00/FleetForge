@@ -318,6 +318,30 @@ export class EventsGateway implements OnGatewayInit, OnGatewayConnection, OnGate
     this.server.emit(event, data);
   }
 
+  /**
+   * Send event directly to a specific device
+   */
+  sendToDevice(deviceId: string, event: string, data: unknown): void {
+    this.server.to(`device:${deviceId}`).emit(event, data);
+  }
+
+  /**
+   * Broadcast deployment update to all subscribed clients
+   */
+  broadcastDeploymentUpdate(deploymentId: string, data: unknown): void {
+    this.server.to(`deployment:${deploymentId}`).emit('deployment:update', {
+      deploymentId,
+      ...(data as object),
+      timestamp: new Date(),
+    });
+    // Also broadcast to all clients for dashboard updates
+    this.server.emit('deployment:progress', {
+      deploymentId,
+      ...(data as object),
+      timestamp: new Date(),
+    });
+  }
+
   getConnectedClientsCount(): number {
     return this.connectedClients.size;
   }
