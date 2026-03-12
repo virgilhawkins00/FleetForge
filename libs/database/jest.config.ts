@@ -32,5 +32,6 @@ export default {
     'fleet.repository.spec.ts',
     'device.repository.spec.ts',
     'telemetry.repository.spec.ts',
+    'database.module.spec.ts',
   ],
 };
