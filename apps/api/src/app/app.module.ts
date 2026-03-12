@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { DatabaseModule } from '@fleetforge/database';
 import { JwtAuthGuard, SecurityModule } from '@fleetforge/security';
 import { AppController } from './app.controller';
@@ -14,6 +14,12 @@ import { FleetsModule } from './fleets/fleets.module';
 import { EventsModule } from './events/events.module';
 import { ShadowsModule } from './shadows/shadows.module';
 import { FleetOperationsModule } from './fleet-operations/fleet-operations.module';
+// Phase 6: Production Readiness modules
+import { HealthModule } from './health/health.module';
+import { LoggingModule } from './logging/logging.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
+import { CacheConfigModule } from './cache/cache.module';
 
 @Module({
   imports: [
@@ -21,6 +27,9 @@ import { FleetOperationsModule } from './fleet-operations/fleet-operations.modul
       isGlobal: true,
       envFilePath: '.env',
     }),
+    // Observability - Logging (must be early for bootstrap logging)
+    LoggingModule,
+    // Database
     DatabaseModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
@@ -28,6 +37,7 @@ import { FleetOperationsModule } from './fleet-operations/fleet-operations.modul
         uri: configService.get<string>('MONGODB_URI', 'mongodb://localhost:27017/fleetforge'),
       }),
     }),
+    // Security
     SecurityModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -38,6 +48,12 @@ import { FleetOperationsModule } from './fleet-operations/fleet-operations.modul
         },
       }),
     }),
+    // Observability - Health Checks & Metrics
+    HealthModule,
+    MetricsModule,
+    // Caching
+    CacheConfigModule,
+    // Feature modules
     AuthModule,
     DevicesModule,
     FirmwareModule,
@@ -55,6 +71,11 @@ import { FleetOperationsModule } from './fleet-operations/fleet-operations.modul
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
+    },
+    // Global HTTP Metrics Interceptor
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: HttpMetricsInterceptor,
     },
   ],
 })

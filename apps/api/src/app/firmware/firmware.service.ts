@@ -1,3 +1,5 @@
+/// <reference types="multer" />
+
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { Firmware, FirmwareStatus, FirmwareSignature } from '@fleetforge/core';
 import { FirmwareRepository } from '@fleetforge/database';

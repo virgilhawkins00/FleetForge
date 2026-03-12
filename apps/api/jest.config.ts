@@ -16,5 +16,7 @@ export default {
     '!src/**/*.spec.ts',
     '!src/**/test/**',
     '!src/main.ts',
+    // Exclude module files (configuration only, no business logic)
+    '!src/**/*.module.ts',
   ],
 };
