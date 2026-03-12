@@ -8,4 +8,12 @@ export default {
   },
   moduleFileExtensions: ['ts', 'js', 'html'],
   coverageDirectory: '../../coverage/apps/mqtt-gateway',
+  coverageThreshold: {
+    global: {
+      branches: 0,
+      functions: 5,
+      lines: 5,
+      statements: 5,
+    },
+  },
 };
