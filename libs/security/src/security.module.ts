@@ -17,6 +17,9 @@ import { TenantGuard } from './guards/tenant.guard';
 import { RateLimitInterceptor } from './interceptors/rate-limit.interceptor';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { MtlsService } from './services/mtls.service';
+import { OAuth2Service } from './sso/oauth2.service';
+import { SAMLService } from './sso/saml.service';
+import { SSOService } from './sso/sso.service';
 
 export interface SecurityModuleOptions {
   jwt: IJwtServiceConfig;
@@ -67,6 +70,11 @@ export class SecurityModule {
       EncryptionService,
       SignatureValidationService,
       MtlsService,
+
+      // SSO Services
+      OAuth2Service,
+      SAMLService,
+      SSOService,
 
       // Guards (for manual injection)
       {
@@ -133,6 +141,9 @@ export class SecurityModule {
         EncryptionService,
         SignatureValidationService,
         MtlsService,
+        OAuth2Service,
+        SAMLService,
+        SSOService,
         JwtAuthGuard,
         RolesGuard,
         PermissionsGuard,
@@ -186,6 +197,11 @@ export class SecurityModule {
       SignatureValidationService,
       MtlsService,
 
+      // SSO Services
+      OAuth2Service,
+      SAMLService,
+      SSOService,
+
       // Guards (for manual injection)
       {
         provide: JwtAuthGuard,
@@ -218,6 +234,9 @@ export class SecurityModule {
         EncryptionService,
         SignatureValidationService,
         MtlsService,
+        OAuth2Service,
+        SAMLService,
+        SSOService,
         JwtAuthGuard,
         RolesGuard,
         PermissionsGuard,

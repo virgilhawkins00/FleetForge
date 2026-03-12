@@ -19,6 +19,9 @@ export * from './services/encryption.service';
 export * from './services/mtls.service';
 export * from './services/tenant.service';
 
+// SSO (Single Sign-On)
+export * from './sso';
+
 // Guards
 export * from './guards/jwt-auth.guard';
 export * from './guards/roles.guard';

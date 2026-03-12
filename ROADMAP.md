@@ -278,10 +278,32 @@
 
 ### Enterprise Features
 
-- [ ] Multi-tenancy
-- [ ] SSO integration (SAML, OAuth)
+- [x] Multi-tenancy
+  - [x] Organization entity with billing, quotas, settings
+  - [x] OrganizationRepository with CRUD operations
+  - [x] TenantGuard for data isolation
+  - [x] TenantService for organization lifecycle
+  - [x] Plan management (FREE, STARTER, PROFESSIONAL, ENTERPRISE)
+  - [x] Quota enforcement (devices, fleets, users)
+- [x] SSO integration (SAML, OAuth)
+  - [x] OAuth2Service (Google, Microsoft, Okta, Auth0, Custom OIDC)
+  - [x] SAMLService (SAML 2.0 for enterprise IdPs)
+  - [x] SSOService unified facade
+  - [x] PKCE support for enhanced security
+  - [x] Attribute mapping for user provisioning
 - [ ] Advanced analytics
 - [ ] SLA monitoring
+
+### Docker & Local Development
+
+- [x] Docker Compose configuration
+  - [x] Full stack compose (docker-compose.yml)
+  - [x] Infrastructure-only compose (docker-compose.dev.yml)
+  - [x] API Dockerfile (multi-stage)
+  - [x] MQTT Gateway Dockerfile
+  - [x] Dashboard Dockerfile
+  - [x] Development setup script (scripts/dev-setup.sh)
+  - [x] Prometheus configuration for metrics
 
 ## Success Metrics
 

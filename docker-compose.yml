@@ -1,0 +1,141 @@
+# FleetForge Docker Compose - Local Development with Orbstack
+# Usage: docker compose up -d
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: fleetforge-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fleetforge
+      MONGO_INITDB_ROOT_PASSWORD: fleetforge123
+      MONGO_INITDB_DATABASE: fleetforge
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: fleetforge-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS Message Queue
+  nats:
+    image: nats:2.10-alpine
+    container_name: fleetforge-nats
+    ports:
+      - "4222:4222"   # Client connections
+      - "8222:8222"   # HTTP monitoring
+    command: ["-js", "-m", "8222"]
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FleetForge API
+  api:
+    build:
+      context: .
+      dockerfile: docker/api.Dockerfile
+    container_name: fleetforge-api
+    ports:
+      - "3100:3100"
+    environment:
+      NODE_ENV: development
+      PORT: 3100
+      MONGODB_URI: mongodb://fleetforge:fleetforge123@mongodb:27017/fleetforge?authSource=admin
+      REDIS_URL: redis://redis:6379
+      NATS_URL: nats://nats:4222
+      JWT_SECRET: fleetforge-local-dev-secret-key-2026
+      JWT_EXPIRATION: 15d
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MQTT Gateway
+  mqtt-gateway:
+    build:
+      context: .
+      dockerfile: docker/mqtt-gateway.Dockerfile
+    container_name: fleetforge-mqtt-gateway
+    ports:
+      - "3200:3200"   # HTTP API
+      - "1883:1883"   # MQTT Broker
+    environment:
+      NODE_ENV: development
+      HTTP_PORT: 3200
+      MQTT_PORT: 1883
+      NATS_URL: nats://nats:4222
+      API_URL: http://api:3100
+    depends_on:
+      nats:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3200/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Web Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: docker/dashboard.Dockerfile
+    container_name: fleetforge-dashboard
+    ports:
+      - "4200:4200"
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3100
+      NEXT_PUBLIC_WS_URL: ws://localhost:3100
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - fleetforge-network
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  fleetforge-network:
+    driver: bridge
+

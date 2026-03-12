@@ -1,0 +1,25 @@
+# Prometheus configuration for FleetForge local development
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # FleetForge API metrics
+  - job_name: 'fleetforge-api'
+    static_configs:
+      - targets: ['host.docker.internal:3100']
+    metrics_path: /metrics
+
+  # MQTT Gateway metrics
+  - job_name: 'fleetforge-mqtt-gateway'
+    static_configs:
+      - targets: ['host.docker.internal:3200']
+    metrics_path: /metrics
+
+  # NATS monitoring
+  - job_name: 'nats'
+    static_configs:
+      - targets: ['nats:8222']
+    metrics_path: /metrics
+

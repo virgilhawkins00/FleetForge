@@ -1,0 +1,106 @@
+# FleetForge Docker Compose - Infrastructure Only (for local development)
+# Usage: docker compose -f docker-compose.dev.yml up -d
+#
+# This starts only the infrastructure services (MongoDB, Redis, NATS)
+# Run the apps locally with: npx nx serve api & npx nx serve mqtt-gateway
+
+services:
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: fleetforge-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fleetforge
+      MONGO_INITDB_ROOT_PASSWORD: fleetforge123
+      MONGO_INITDB_DATABASE: fleetforge
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: fleetforge-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # NATS Message Queue with JetStream
+  nats:
+    image: nats:2.10-alpine
+    container_name: fleetforge-nats
+    ports:
+      - "4222:4222"   # Client connections
+      - "8222:8222"   # HTTP monitoring
+    command: ["-js", "-m", "8222"]
+    networks:
+      - fleetforge-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Jaeger for distributed tracing (optional)
+  jaeger:
+    image: jaegertracing/all-in-one:1.54
+    container_name: fleetforge-jaeger
+    ports:
+      - "5775:5775/udp"   # Compact thrift
+      - "6831:6831/udp"   # Thrift
+      - "6832:6832/udp"   # Thrift
+      - "5778:5778"       # Config
+      - "16686:16686"     # Web UI
+      - "14250:14250"     # gRPC
+      - "14268:14268"     # HTTP
+      - "4317:4317"       # OTLP gRPC
+      - "4318:4318"       # OTLP HTTP
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    networks:
+      - fleetforge-network
+    profiles:
+      - tracing
+
+  # Prometheus for metrics (optional)
+  prometheus:
+    image: prom/prometheus:v2.50.1
+    container_name: fleetforge-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.enable-lifecycle'
+    networks:
+      - fleetforge-network
+    profiles:
+      - monitoring
+
+volumes:
+  mongodb_data:
+  redis_data:
+
+networks:
+  fleetforge-network:
+    driver: bridge
+
