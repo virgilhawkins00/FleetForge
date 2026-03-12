@@ -139,7 +139,7 @@ export class BigQueryService {
     deviceId: string,
     startTime: Date,
     endTime: Date,
-    limit = 1000
+    limit = 1000,
   ): Promise<TelemetryMessage[]> {
     const query = `
       SELECT device_id, fleet_id, timestamp, metrics, metadata
@@ -152,16 +152,20 @@ export class BigQueryService {
 
     const [rows] = await this.client.query({
       query,
-      params: { deviceId, startTime: startTime.toISOString(), endTime: endTime.toISOString(), limit },
+      params: {
+        deviceId,
+        startTime: startTime.toISOString(),
+        endTime: endTime.toISOString(),
+        limit,
+      },
     });
 
     return rows.map((row: Record<string, unknown>) => ({
-      deviceId: row.device_id as string,
-      fleetId: row.fleet_id as string | undefined,
-      timestamp: new Date(row.timestamp as string),
-      metrics: JSON.parse(row.metrics as string),
-      metadata: row.metadata ? JSON.parse(row.metadata as string) : undefined,
+      deviceId: row['device_id'] as string,
+      fleetId: row['fleet_id'] as string | undefined,
+      timestamp: new Date(row['timestamp'] as string),
+      metrics: JSON.parse(row['metrics'] as string),
+      metadata: row['metadata'] ? JSON.parse(row['metadata'] as string) : undefined,
     }));
   }
 }
-

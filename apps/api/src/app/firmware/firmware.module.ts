@@ -5,11 +5,12 @@ import { FirmwareController } from './firmware.controller';
 import { FirmwareService } from './firmware.service';
 import { StorageService } from './services/storage.service';
 import { FirmwareValidationService } from './services/firmware-validation.service';
+import { GCPFirmwareService } from '../gcp/gcp-firmware.service';
 
 @Module({
   imports: [DatabaseModule, ConfigModule],
   controllers: [FirmwareController],
-  providers: [FirmwareService, StorageService, FirmwareValidationService],
+  providers: [FirmwareService, StorageService, FirmwareValidationService, GCPFirmwareService],
   exports: [FirmwareService, StorageService, FirmwareValidationService],
 })
 export class FirmwareModule {}

@@ -23,6 +23,8 @@ import { CacheConfigModule } from './cache/cache.module';
 import { AuditModule } from './audit/audit.module';
 import { TracingModule } from './tracing/tracing.module';
 import { TracingInterceptor } from './tracing/tracing.interceptor';
+// Phase 7: Cloud Integrations - GCP
+import { GCPModule } from './gcp/gcp.module';
 
 @Module({
   imports: [
@@ -59,6 +61,16 @@ import { TracingInterceptor } from './tracing/tracing.interceptor';
     CacheConfigModule,
     // Audit Logging
     AuditModule,
+    // Cloud Integrations - GCP (Phase 7)
+    GCPModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => ({
+        projectId: configService.get<string>('GCP_PROJECT_ID', 'fleetforge-prod'),
+        credentials: configService.get<string>('GCP_CREDENTIALS'),
+        region: configService.get<string>('GCP_REGION', 'us-central1'),
+        enabled: configService.get<boolean>('GCP_ENABLED', false),
+      }),
+    }),
     // Feature modules
     AuthModule,
     DevicesModule,

@@ -1,4 +1,4 @@
-import { Storage, Bucket, File } from '@google-cloud/storage';
+import { Storage, Bucket } from '@google-cloud/storage';
 import { createHash } from 'crypto';
 import { StorageConfig, FirmwareArtifact } from '../types';
 
@@ -65,7 +65,7 @@ export class StorageService {
     deviceType: string,
     version: string,
     fileBuffer: Buffer,
-    metadata?: Record<string, string>
+    metadata?: Record<string, string>,
   ): Promise<FirmwareArtifact> {
     const bucket = await this.ensureBucket(this.config.firmwareBucket!);
     const fileName = `${deviceType}/${version}/firmware.bin`;
@@ -101,7 +101,7 @@ export class StorageService {
   async getFirmwareUrl(
     deviceType: string,
     version: string,
-    expiresInMinutes = 60
+    expiresInMinutes = 60,
   ): Promise<string> {
     const bucket = await this.ensureBucket(this.config.firmwareBucket!);
     const fileName = `${deviceType}/${version}/firmware.bin`;
@@ -129,14 +129,15 @@ export class StorageService {
         const [metadata] = await file.getMetadata();
         const parts = file.name.split('/');
 
+        const customMetadata = metadata.metadata as Record<string, string> | undefined;
         artifacts.push({
           version: parts[1],
           deviceType,
           fileName: file.name,
-          checksum: metadata.metadata?.checksum || '',
+          checksum: customMetadata?.['checksum'] || '',
           size: parseInt(metadata.size as string, 10),
           uploadedAt: new Date(metadata.timeCreated as string),
-          metadata: metadata.metadata as Record<string, string>,
+          metadata: customMetadata,
         });
       }
     }
@@ -152,4 +153,3 @@ export class StorageService {
     await bucket.deleteFiles({ prefix: `${deviceType}/${version}/` });
   }
 }
-

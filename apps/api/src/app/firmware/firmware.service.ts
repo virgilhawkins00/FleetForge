@@ -1,6 +1,12 @@
 /// <reference types="multer" />
 
-import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  Logger,
+  Optional,
+} from '@nestjs/common';
 import { Firmware, FirmwareStatus, FirmwareSignature } from '@fleetforge/core';
 import { FirmwareRepository } from '@fleetforge/database';
 import { CreateFirmwareDto } from './dto/create-firmware.dto';
@@ -14,6 +20,7 @@ import {
 } from './dto/upload-firmware.dto';
 import { StorageService } from './services/storage.service';
 import { FirmwareValidationService } from './services/firmware-validation.service';
+import { GCPFirmwareService } from '../gcp/gcp-firmware.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -24,6 +31,7 @@ export class FirmwareService {
     private readonly firmwareRepository: FirmwareRepository,
     private readonly storageService: StorageService,
     private readonly validationService: FirmwareValidationService,
+    @Optional() private readonly gcpFirmware?: GCPFirmwareService,
   ) {}
 
   async create(createFirmwareDto: CreateFirmwareDto): Promise<FirmwareResponseDto> {
@@ -160,6 +168,18 @@ export class FirmwareService {
       },
       { key: `firmware/${uploadDto.version}/${file.originalname}` },
     );
+
+    // 2.5 Backup to GCP Cloud Storage (async, non-blocking)
+    if (this.gcpFirmware) {
+      this.gcpFirmware
+        .uploadFirmware(uploadDto.type, uploadDto.version, file.buffer, {
+          originalName: file.originalname,
+          localUrl: storedFile.url,
+        })
+        .catch((err) => {
+          this.logger.warn(`GCP firmware backup failed: ${err.message}`);
+        });
+    }
 
     // 3. Parse deviceTypes from comma-separated string (form-data)
     const deviceTypes = this.parseDeviceTypes(uploadDto.deviceTypes);

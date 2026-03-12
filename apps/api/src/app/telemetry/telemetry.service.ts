@@ -1,13 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Optional } from '@nestjs/common';
 import { Telemetry, ILocation, ITelemetrySensor } from '@fleetforge/core';
 import { TelemetryRepository } from '@fleetforge/database';
 import { CreateTelemetryDto } from './dto/create-telemetry.dto';
 import { TelemetryResponseDto } from './dto/telemetry-response.dto';
+import { GCPTelemetryService } from '../gcp/gcp-telemetry.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class TelemetryService {
-  constructor(private readonly telemetryRepository: TelemetryRepository) {}
+  constructor(
+    private readonly telemetryRepository: TelemetryRepository,
+    @Optional() private readonly gcpTelemetry?: GCPTelemetryService,
+  ) {}
 
   async create(createTelemetryDto: CreateTelemetryDto): Promise<TelemetryResponseDto> {
     let location: ILocation | undefined;
@@ -42,6 +46,14 @@ export class TelemetryService {
     );
 
     const saved = await this.telemetryRepository.create(telemetry);
+
+    // Stream to GCP Pub/Sub and BigQuery (async, non-blocking)
+    if (this.gcpTelemetry) {
+      this.gcpTelemetry.streamTelemetry(saved).catch(() => {
+        // GCP streaming is best-effort, don't fail the request
+      });
+    }
+
     return this.toResponseDto(saved);
   }
 
@@ -80,6 +92,14 @@ export class TelemetryService {
     });
 
     const saved = await this.telemetryRepository.bulkCreate(telemetryList);
+
+    // Stream batch to GCP (async, non-blocking)
+    if (this.gcpTelemetry) {
+      this.gcpTelemetry.streamBatch(saved).catch(() => {
+        // GCP streaming is best-effort
+      });
+    }
+
     return saved.map((t) => this.toResponseDto(t));
   }
 
@@ -135,4 +155,3 @@ export class TelemetryService {
     };
   }
 }
-
