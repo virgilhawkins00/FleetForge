@@ -106,7 +106,7 @@ export class PhasedConfigModel {
 
 @Schema({ _id: false })
 export class DeploymentConfigModel {
-  @Prop({ required: true, enum: DeploymentStrategy })
+  @Prop({ type: String, required: true, enum: Object.values(DeploymentStrategy) })
   strategy!: DeploymentStrategy;
 
   @Prop({ type: DeploymentTargetModel, required: true })
@@ -175,7 +175,7 @@ export class DeploymentModel {
   @Prop({ required: true })
   name!: string;
 
-  @Prop({ required: true, enum: DeploymentStatus, index: true })
+  @Prop({ type: String, required: true, enum: Object.values(DeploymentStatus), index: true })
   status!: DeploymentStatus;
 
   @Prop({ type: DeploymentConfigModel, required: true })

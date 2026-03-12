@@ -3,16 +3,10 @@
  * Orchestrates OAuth2/OIDC and SAML authentication flows
  */
 
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OAuth2Service } from './oauth2.service';
 import { SAMLService } from './saml.service';
-import {
-  ISSOConfig,
-  ISSOUser,
-  ISSOSession,
-  SSOProvider,
-  SSOProtocol,
-} from './types';
+import { ISSOConfig, ISSOUser, ISSOSession, SSOProvider, SSOProtocol } from './types';
 import * as crypto from 'crypto';
 
 export interface SSOLoginResult {
@@ -87,12 +81,17 @@ export class SSOService {
     organizationId: string,
   ): Promise<SSOLoginResult> {
     const mergedConfig = this.mergeWithDefaults(config);
-    
+
     const tokens = await this.oauth2Service.exchangeCodeForTokens(mergedConfig, code, state);
     const user = await this.oauth2Service.getUserInfo(mergedConfig, tokens.accessToken);
-    
-    const session = this.createSession(user, organizationId, tokens.accessToken, tokens.refreshToken);
-    
+
+    const session = this.createSession(
+      user,
+      organizationId,
+      tokens.accessToken,
+      tokens.refreshToken,
+    );
+
     this.logger.log(`OAuth2 login successful: ${user.email} (org: ${organizationId})`);
     return { user, session };
   }
@@ -106,12 +105,12 @@ export class SSOService {
     organizationId: string,
   ): Promise<SSOLoginResult> {
     const mergedConfig = this.mergeWithDefaults(config);
-    
+
     const assertion = await this.samlService.parseSAMLResponse(mergedConfig, samlResponse);
     const user = this.samlService.assertionToUser(assertion, mergedConfig);
-    
+
     const session = this.createSession(user, organizationId);
-    
+
     this.logger.log(`SAML login successful: ${user.email} (org: ${organizationId})`);
     return { user, session };
   }
@@ -172,4 +171,3 @@ export class SSOService {
     return { ...defaults, ...config };
   }
 }
-

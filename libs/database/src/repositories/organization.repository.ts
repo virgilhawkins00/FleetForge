@@ -55,37 +55,45 @@ export class OrganizationRepository {
   async update(id: string, updates: Partial<Organization>): Promise<Organization | null> {
     const updateObj: Record<string, unknown> = {};
 
-    if (updates.name) updateObj.name = updates.name;
-    if (updates.status) updateObj.status = updates.status;
-    if (updates.billing) updateObj.billing = updates.billing;
-    if (updates.quotas) updateObj.quotas = updates.quotas;
-    if (updates.settings) updateObj.settings = updates.settings;
-    if (updates.usage) updateObj.usage = updates.usage;
-    updateObj.updatedAt = new Date();
+    if (updates.name) updateObj['name'] = updates.name;
+    if (updates.status) updateObj['status'] = updates.status;
+    if (updates.billing) updateObj['billing'] = updates.billing;
+    if (updates.quotas) updateObj['quotas'] = updates.quotas;
+    if (updates.settings) updateObj['settings'] = updates.settings;
+    if (updates.usage) updateObj['usage'] = updates.usage;
+    updateObj['updatedAt'] = new Date();
 
     const doc = await this.model.findByIdAndUpdate(id, { $set: updateObj }, { new: true }).exec();
     return doc ? OrganizationMapper.toDomain(doc) : null;
   }
 
   async updateUsage(id: string, usage: Partial<Organization['usage']>): Promise<void> {
-    await this.model.findByIdAndUpdate(id, {
-      $set: {
-        'usage.currentDevices': usage.currentDevices,
-        'usage.currentFleets': usage.currentFleets,
-        'usage.currentUsers': usage.currentUsers,
-        'usage.currentFirmwareStorage': usage.currentFirmwareStorage,
-        'usage.currentApiRequests': usage.currentApiRequests,
-        'usage.lastCalculatedAt': new Date(),
-        updatedAt: new Date(),
-      },
-    }).exec();
+    await this.model
+      .findByIdAndUpdate(id, {
+        $set: {
+          'usage.currentDevices': usage.currentDevices,
+          'usage.currentFleets': usage.currentFleets,
+          'usage.currentUsers': usage.currentUsers,
+          'usage.currentFirmwareStorage': usage.currentFirmwareStorage,
+          'usage.currentApiRequests': usage.currentApiRequests,
+          'usage.lastCalculatedAt': new Date(),
+          updatedAt: new Date(),
+        },
+      })
+      .exec();
   }
 
-  async incrementUsage(id: string, field: keyof Organization['usage'], amount: number = 1): Promise<void> {
-    await this.model.findByIdAndUpdate(id, {
-      $inc: { [`usage.${field}`]: amount },
-      $set: { updatedAt: new Date() },
-    }).exec();
+  async incrementUsage(
+    id: string,
+    field: keyof Organization['usage'],
+    amount: number = 1,
+  ): Promise<void> {
+    await this.model
+      .findByIdAndUpdate(id, {
+        $inc: { [`usage.${field}`]: amount },
+        $set: { updatedAt: new Date() },
+      })
+      .exec();
   }
 
   async delete(id: string): Promise<boolean> {
@@ -98,11 +106,12 @@ export class OrganizationRepository {
   }
 
   async findExpiredTrials(): Promise<Organization[]> {
-    const docs = await this.model.find({
-      status: OrganizationStatus.TRIAL,
-      'billing.trialEndsAt': { $lt: new Date() },
-    }).exec();
+    const docs = await this.model
+      .find({
+        status: OrganizationStatus.TRIAL,
+        'billing.trialEndsAt': { $lt: new Date() },
+      })
+      .exec();
     return docs.map(OrganizationMapper.toDomain);
   }
 }
-

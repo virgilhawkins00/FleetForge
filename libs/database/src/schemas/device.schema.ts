@@ -112,40 +112,40 @@ export class DeviceLifecycleTimestampsModel {
 
 @Schema({ _id: false })
 export class LifecycleHistoryEntryModel {
-  @Prop({ required: true, enum: DeviceLifecycleEvent })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceLifecycleEvent) })
   event!: DeviceLifecycleEvent;
 
-  @Prop({ required: true, enum: DeviceStatus })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceStatus) })
   fromStatus!: DeviceStatus;
 
-  @Prop({ required: true, enum: DeviceStatus })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceStatus) })
   toStatus!: DeviceStatus;
 
-  @Prop({ required: true })
+  @Prop({ type: Date, required: true })
   timestamp!: Date;
 
-  @Prop()
+  @Prop({ type: String })
   reason?: string;
 
-  @Prop()
+  @Prop({ type: String })
   performedBy?: string;
 }
 
 @Schema({ collection: 'devices', timestamps: true })
 export class DeviceModel {
-  @Prop({ required: true, unique: true })
+  @Prop({ type: String, required: true, unique: true })
   _id!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   fleetId!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   name!: string;
 
-  @Prop({ required: true, enum: DeviceType })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceType) })
   type!: DeviceType;
 
-  @Prop({ required: true, enum: DeviceStatus, index: true })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceStatus), index: true })
   status!: DeviceStatus;
 
   @Prop({ type: DeviceMetadataModel, required: true })
@@ -154,10 +154,10 @@ export class DeviceModel {
   @Prop({ type: DeviceCapabilitiesModel, required: true })
   capabilities!: DeviceCapabilitiesModel;
 
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   firmwareVersion!: string;
 
-  @Prop({ required: true, index: true })
+  @Prop({ type: Date, required: true, index: true })
   lastSeen!: Date;
 
   @Prop({ type: LocationModel })
@@ -175,10 +175,10 @@ export class DeviceModel {
   @Prop({ type: [LifecycleHistoryEntryModel], default: [] })
   lifecycleHistory!: LifecycleHistoryEntryModel[];
 
-  @Prop()
+  @Prop({ type: Date })
   createdAt!: Date;
 
-  @Prop()
+  @Prop({ type: Date })
   updatedAt!: Date;
 }
 

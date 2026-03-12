@@ -76,7 +76,7 @@ export class DeviceDeploymentModel {
   @Prop({ required: true, index: true })
   firmwareId!: string;
 
-  @Prop({ required: true, enum: DeviceDeploymentStatus, index: true })
+  @Prop({ type: String, required: true, enum: Object.values(DeviceDeploymentStatus), index: true })
   status!: DeviceDeploymentStatus;
 
   @Prop()
@@ -113,4 +113,3 @@ export const DeviceDeploymentSchema = SchemaFactory.createForClass(DeviceDeploym
 DeviceDeploymentSchema.index({ deploymentId: 1, status: 1 });
 DeviceDeploymentSchema.index({ deviceId: 1, createdAt: -1 });
 DeviceDeploymentSchema.index({ deploymentId: 1, deviceId: 1 }, { unique: true });
-

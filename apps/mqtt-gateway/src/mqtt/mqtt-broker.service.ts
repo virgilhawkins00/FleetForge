@@ -68,7 +68,7 @@ export class MqttBrokerService implements OnModuleInit, OnModuleDestroy {
       username: Readonly<string | undefined>,
       password: Readonly<Buffer | undefined>,
       callback: (error: AuthenticateError | null, success: boolean | null) => void,
-    ) => {
+    ): void => {
       const passwordStr = password?.toString();
       // TODO: Implement proper auth with JWT or API key
       const isValid = username && passwordStr;

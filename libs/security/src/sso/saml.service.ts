@@ -35,7 +35,9 @@ export class SAMLService {
         <samlp:NameIDPolicy Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
                            AllowCreate="true"/>
       </samlp:AuthnRequest>
-    `.trim().replace(/\s+/g, ' ');
+    `
+      .trim()
+      .replace(/\s+/g, ' ');
 
     const encodedRequest = Buffer.from(authnRequest).toString('base64');
     const params = new URLSearchParams({
@@ -56,10 +58,7 @@ export class SAMLService {
   /**
    * Parse and validate SAML Response
    */
-  async parseSAMLResponse(
-    config: ISSOConfig,
-    samlResponse: string,
-  ): Promise<ISAMLAssertion> {
+  async parseSAMLResponse(config: ISSOConfig, samlResponse: string): Promise<ISAMLAssertion> {
     if (!config.samlCert) {
       throw new BadRequestException('SAML certificate not configured');
     }
@@ -67,10 +66,10 @@ export class SAMLService {
     try {
       // Decode SAML Response
       const decoded = Buffer.from(samlResponse, 'base64').toString('utf8');
-      
+
       // Basic XML parsing (in production, use a proper SAML library like saml2-js or passport-saml)
       const assertion = this.extractAssertion(decoded);
-      
+
       // Validate signature
       if (!this.validateSignature(decoded, config.samlCert)) {
         throw new UnauthorizedException('Invalid SAML signature');
@@ -131,7 +130,9 @@ export class SAMLService {
         <saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress">${nameId}</saml:NameID>
         ${sessionIndex ? `<samlp:SessionIndex>${sessionIndex}</samlp:SessionIndex>` : ''}
       </samlp:LogoutRequest>
-    `.trim().replace(/\s+/g, ' ');
+    `
+      .trim()
+      .replace(/\s+/g, ' ');
 
     const encodedRequest = Buffer.from(logoutRequest).toString('base64');
     return `${logoutUrl}?SAMLRequest=${encodeURIComponent(encodedRequest)}`;
@@ -141,9 +142,10 @@ export class SAMLService {
     // Simplified extraction - in production use proper XML/SAML library
     const nameIdMatch = xml.match(/<saml:NameID[^>]*>([^<]+)<\/saml:NameID>/);
     const issuerMatch = xml.match(/<saml:Issuer>([^<]+)<\/saml:Issuer>/);
-    
+
     const attributes: Record<string, string | string[]> = {};
-    const attrRegex = /<saml:Attribute Name="([^"]+)"[^>]*>[\s\S]*?<saml:AttributeValue[^>]*>([^<]+)/g;
+    const attrRegex =
+      /<saml:Attribute Name="([^"]+)"[^>]*>[\s\S]*?<saml:AttributeValue[^>]*>([^<]+)/g;
     let match;
     while ((match = attrRegex.exec(xml)) !== null) {
       attributes[match[1]] = match[2];
@@ -156,7 +158,7 @@ export class SAMLService {
     };
   }
 
-  private validateSignature(xml: string, cert: string): boolean {
+  private validateSignature(xml: string, _cert: string): boolean {
     // Simplified validation - in production use proper crypto validation
     const hasSignature = xml.includes('<ds:Signature') || xml.includes('<Signature');
     return hasSignature; // Placeholder - real implementation would verify signature
@@ -180,4 +182,3 @@ export class SAMLService {
     return Array.isArray(value) ? value : [value];
   }
 }
-

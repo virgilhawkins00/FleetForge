@@ -65,8 +65,8 @@ export interface ISSOAuthResponse {
   accessToken: string;
   refreshToken?: string;
   idToken?: string;
-  expiresIn: number;
-  tokenType: string;
+  expiresIn?: number;
+  tokenType?: string;
   scope?: string;
 }
 
@@ -100,4 +100,3 @@ export interface ISAMLAssertion {
     audience?: string;
   };
 }
-

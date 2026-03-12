@@ -221,16 +221,17 @@ export class FirmwareController {
     return this.firmwareService.validateFirmwareFile(file, validateDto);
   }
 
-  @Get('download/:key(*)')
+  @Get('download/*key')
   @Permissions(Permission.FIRMWARE_READ)
   @ApiOperation({ summary: 'Download firmware binary file' })
   @ApiResponse({ status: 200, description: 'Firmware file stream' })
   @ApiResponse({ status: 404, description: 'File not found' })
   async downloadFirmware(
-    @Param('key') key: string,
+    @Param('key') key: string[],
     @Res({ passthrough: true }) res: Response,
   ): Promise<StreamableFile> {
-    const { buffer, filename, contentType } = await this.firmwareService.downloadFirmware(key);
+    const keyPath = Array.isArray(key) ? key.join('/') : key;
+    const { buffer, filename, contentType } = await this.firmwareService.downloadFirmware(keyPath);
 
     res.set({
       'Content-Type': contentType,

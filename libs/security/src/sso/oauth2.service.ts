@@ -5,14 +5,28 @@
 
 import { Injectable, Logger, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import * as crypto from 'crypto';
-import {
-  ISSOConfig,
-  ISSOUser,
-  ISSOAuthResponse,
-  IOAuthState,
-  SSOProvider,
-  SSOProtocol,
-} from './types';
+import { ISSOConfig, ISSOUser, ISSOAuthResponse, IOAuthState } from './types';
+
+interface TokenResponse {
+  access_token: string;
+  refresh_token?: string;
+  id_token?: string;
+  expires_in?: number;
+  token_type?: string;
+  scope?: string;
+}
+
+interface UserInfoResponse {
+  sub?: string;
+  id?: string;
+  email?: string;
+  given_name?: string;
+  family_name?: string;
+  name?: string;
+  groups?: string[];
+  roles?: string[];
+  [key: string]: unknown;
+}
 
 @Injectable()
 export class OAuth2Service {
@@ -22,7 +36,11 @@ export class OAuth2Service {
   /**
    * Generate OAuth2 authorization URL
    */
-  generateAuthorizationUrl(config: ISSOConfig, organizationId: string, redirectUrl?: string): string {
+  generateAuthorizationUrl(
+    config: ISSOConfig,
+    organizationId: string,
+    redirectUrl?: string,
+  ): string {
     if (!config.authorizationUrl || !config.clientId) {
       throw new BadRequestException('OAuth2 configuration incomplete');
     }
@@ -41,10 +59,7 @@ export class OAuth2Service {
 
     // Add PKCE for enhanced security
     const codeVerifier = crypto.randomBytes(32).toString('base64url');
-    const codeChallenge = crypto
-      .createHash('sha256')
-      .update(codeVerifier)
-      .digest('base64url');
+    const codeChallenge = crypto.createHash('sha256').update(codeVerifier).digest('base64url');
     params.append('code_challenge', codeChallenge);
     params.append('code_challenge_method', 'S256');
 
@@ -87,7 +102,7 @@ export class OAuth2Service {
         throw new UnauthorizedException('Failed to exchange authorization code');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as TokenResponse;
       this.logger.log(`Token exchange successful for org: ${storedState.organizationId}`);
 
       return {
@@ -121,20 +136,23 @@ export class OAuth2Service {
         throw new UnauthorizedException('Failed to fetch user info');
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as UserInfoResponse;
       const mapping = config.attributeMapping || { email: 'email' };
 
+      const id = data.sub || data.id || '';
+      const email = (data[mapping.email] as string) || data.email || '';
+
       return {
-        id: data.sub || data.id,
-        email: data[mapping.email] || data.email,
-        firstName: data[mapping.firstName || 'given_name'],
-        lastName: data[mapping.lastName || 'family_name'],
-        displayName: data[mapping.displayName || 'name'],
-        groups: data[mapping.groups || 'groups'],
-        roles: data[mapping.roles || 'roles'],
+        id,
+        email,
+        firstName: data[mapping.firstName || 'given_name'] as string | undefined,
+        lastName: data[mapping.lastName || 'family_name'] as string | undefined,
+        displayName: data[mapping.displayName || 'name'] as string | undefined,
+        groups: data[mapping.groups || 'groups'] as string[] | undefined,
+        roles: data[mapping.roles || 'roles'] as string[] | undefined,
         provider: config.provider,
-        providerUserId: data.sub || data.id,
-        rawAttributes: data,
+        providerUserId: id,
+        rawAttributes: data as Record<string, unknown>,
       };
     } catch (error) {
       this.logger.error(`UserInfo fetch error: ${error}`);
@@ -167,7 +185,7 @@ export class OAuth2Service {
       throw new UnauthorizedException('Failed to refresh token');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as TokenResponse;
     return {
       accessToken: data.access_token,
       refreshToken: data.refresh_token,
@@ -199,4 +217,3 @@ export class OAuth2Service {
     return stored;
   }
 }
-

@@ -1,6 +1,21 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PubSubService, TelemetryMessage, DeviceEvent } from '@fleetforge/gcp-integration';
+
+// Local interfaces - GCP integration is optional
+export interface TelemetryMessage {
+  deviceId: string;
+  timestamp: Date;
+  metrics: Record<string, unknown>;
+  fleetId?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface DeviceEvent {
+  deviceId: string;
+  eventType: string;
+  timestamp: Date;
+  data: Record<string, unknown>;
+}
 
 export interface BridgeStats {
   telemetryCount: number;
@@ -9,11 +24,18 @@ export interface BridgeStats {
   lastActivity: Date | null;
 }
 
+// GCP PubSub interface for optional dependency injection
+interface PubSubInterface {
+  initialize(): Promise<void>;
+  publishTelemetry(message: TelemetryMessage): Promise<unknown>;
+  publishEvent(event: DeviceEvent): Promise<unknown>;
+}
+
 @Injectable()
 export class MqttBridgeService implements OnModuleInit {
   private readonly logger = new Logger(MqttBridgeService.name);
   private readonly enabled: boolean;
-  private pubsub: PubSubService | null = null;
+  private pubsub: PubSubInterface | null = null;
 
   private stats: BridgeStats = {
     telemetryCount: 0,
@@ -28,15 +50,18 @@ export class MqttBridgeService implements OnModuleInit {
 
   async onModuleInit(): Promise<void> {
     if (!this.enabled) {
-      this.logger.warn('GCP bridge is disabled. Set GCP_ENABLED=true to enable.');
+      this.logger.warn('GCP bridge is disabled. Running in standalone mode.');
+      this.logger.log('📡 MQTT Gateway ready (local mode - no GCP bridge)');
       return;
     }
 
     try {
+      // Dynamic import for GCP integration (optional dependency)
+      const { PubSubService } = await import('@fleetforge/gcp-integration');
       const projectId = this.configService.get<string>('GCP_PROJECT_ID', 'fleetforge-prod');
       const credentials = this.configService.get<string>('GCP_CREDENTIALS');
 
-      this.pubsub = new PubSubService({
+      const pubsubInstance = new PubSubService({
         projectId,
         credentials,
         telemetryTopic: this.configService.get<string>(
@@ -47,11 +72,13 @@ export class MqttBridgeService implements OnModuleInit {
         eventsTopic: this.configService.get<string>('GCP_EVENTS_TOPIC', 'fleetforge-events'),
       });
 
-      await this.pubsub.initialize();
+      await pubsubInstance.initialize();
+      this.pubsub = pubsubInstance;
       this.logger.log('✅ GCP Pub/Sub bridge initialized');
     } catch (error) {
       const err = error as Error;
       this.logger.error(`Failed to initialize GCP bridge: ${err.message}`);
+      this.logger.warn('Running in standalone mode without GCP bridge');
     }
   }
 

@@ -135,7 +135,7 @@ export class Organization {
     this.updatedAt = new Date();
   }
 
-  suspend(reason?: string): void {
+  suspend(_reason?: string): void {
     this.status = OrganizationStatus.SUSPENDED;
     this.updatedAt = new Date();
   }
@@ -150,4 +150,3 @@ export class Organization {
     this.updatedAt = new Date();
   }
 }
-

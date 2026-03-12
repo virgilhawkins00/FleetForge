@@ -25,7 +25,8 @@ class OrganizationQuotasModel implements IOrganizationQuotas {
 
 @Schema({ _id: false })
 class OrganizationBillingModel implements IOrganizationBilling {
-  @Prop({ required: true, enum: OrganizationPlan }) plan!: OrganizationPlan;
+  @Prop({ type: String, required: true, enum: Object.values(OrganizationPlan) })
+  plan!: OrganizationPlan;
   @Prop() stripeCustomerId?: string;
   @Prop() stripeSubscriptionId?: string;
   @Prop() trialEndsAt?: Date;
@@ -65,7 +66,7 @@ export class OrganizationModel {
   @Prop({ required: true, unique: true, index: true })
   slug!: string;
 
-  @Prop({ required: true, enum: OrganizationStatus, index: true })
+  @Prop({ type: String, required: true, enum: Object.values(OrganizationStatus), index: true })
   status!: OrganizationStatus;
 
   @Prop({ type: OrganizationBillingModel, required: true })
@@ -93,4 +94,3 @@ export const OrganizationSchema = SchemaFactory.createForClass(OrganizationModel
 // Indexes
 OrganizationSchema.index({ 'billing.plan': 1, status: 1 });
 OrganizationSchema.index({ ownerId: 1 });
-

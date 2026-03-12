@@ -61,19 +61,19 @@ export class FirmwareSignatureModel {
 
 @Schema({ collection: 'firmwares', timestamps: true })
 export class FirmwareModel {
-  @Prop({ required: true, unique: true })
+  @Prop({ type: String, required: true, unique: true })
   _id!: string;
 
-  @Prop({ required: true, unique: true, index: true })
+  @Prop({ type: String, required: true, unique: true, index: true })
   version!: string;
 
-  @Prop({ required: true })
+  @Prop({ type: String, required: true })
   name!: string;
 
-  @Prop({ required: true, enum: FirmwareType })
+  @Prop({ type: String, required: true, enum: Object.values(FirmwareType) })
   type!: FirmwareType;
 
-  @Prop({ required: true, enum: FirmwareStatus, index: true })
+  @Prop({ type: String, required: true, enum: Object.values(FirmwareStatus), index: true })
   status!: FirmwareStatus;
 
   @Prop({ type: FirmwareFileModel, required: true })
@@ -85,16 +85,16 @@ export class FirmwareModel {
   @Prop({ type: FirmwareMetadataModel, required: true })
   metadata!: FirmwareMetadataModel;
 
-  @Prop({ required: true, index: true })
+  @Prop({ type: String, required: true, index: true })
   createdBy!: string;
 
-  @Prop()
+  @Prop({ type: Date })
   publishedAt?: Date;
 
-  @Prop()
+  @Prop({ type: Date })
   createdAt!: Date;
 
-  @Prop()
+  @Prop({ type: Date })
   updatedAt!: Date;
 }
 

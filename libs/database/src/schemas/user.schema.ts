@@ -25,10 +25,16 @@ export class UserModel {
   @Prop({ required: true })
   lastName!: string;
 
-  @Prop({ required: true, enum: UserRole, default: UserRole.VIEWER, index: true })
+  @Prop({
+    type: String,
+    required: true,
+    enum: Object.values(UserRole),
+    default: UserRole.VIEWER,
+    index: true,
+  })
   role!: UserRole;
 
-  @Prop({ type: [String], enum: Permission, default: [] })
+  @Prop({ type: [String], enum: Object.values(Permission), default: [] })
   permissions!: Permission[];
 
   @Prop({ index: true })
@@ -73,4 +79,3 @@ export const UserSchema = SchemaFactory.createForClass(UserModel);
 // Indexes
 UserSchema.index({ organizationId: 1, role: 1 });
 UserSchema.index({ email: 1, isActive: 1 });
-
