@@ -11,6 +11,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "incremental": true,
+    "lib": ["dom", "dom.iterable", "esnext"],
     "plugins": [
       {
         "name": "next"
@@ -18,14 +19,6 @@
     ],
     "types": ["jest", "node"]
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx",
-    "**/*.js",
-    "**/*.jsx",
-    ".next/types/**/*.ts",
-    "next-env.d.ts"
-  ],
+  "include": ["**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", ".next/types/**/*.ts", "next-env.d.ts"],
   "exclude": ["node_modules", "jest.config.ts", ".next", "out"]
 }
-

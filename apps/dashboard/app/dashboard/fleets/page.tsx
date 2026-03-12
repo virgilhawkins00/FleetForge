@@ -1,15 +1,49 @@
 'use client';
 
-import { useState } from 'react';
 import { Plus, Layers, MoreVertical } from 'lucide-react';
 import { Button, Card, CardContent, CardHeader, CardTitle, Badge } from '@/components/ui';
 
 const mockFleets = [
-  { id: '1', name: 'Production Fleet A', description: 'Main production devices', deviceCount: 523, onlineCount: 498, status: 'active' },
-  { id: '2', name: 'Production Fleet B', description: 'Secondary production', deviceCount: 312, onlineCount: 289, status: 'active' },
-  { id: '3', name: 'Staging Fleet', description: 'Pre-production testing', deviceCount: 87, onlineCount: 72, status: 'active' },
-  { id: '4', name: 'Development', description: 'Development and testing', deviceCount: 45, onlineCount: 38, status: 'active' },
-  { id: '5', name: 'Legacy Devices', description: 'Older device fleet', deviceCount: 280, onlineCount: 192, status: 'maintenance' },
+  {
+    id: '1',
+    name: 'Production Fleet A',
+    description: 'Main production devices',
+    deviceCount: 523,
+    onlineCount: 498,
+    status: 'active',
+  },
+  {
+    id: '2',
+    name: 'Production Fleet B',
+    description: 'Secondary production',
+    deviceCount: 312,
+    onlineCount: 289,
+    status: 'active',
+  },
+  {
+    id: '3',
+    name: 'Staging Fleet',
+    description: 'Pre-production testing',
+    deviceCount: 87,
+    onlineCount: 72,
+    status: 'active',
+  },
+  {
+    id: '4',
+    name: 'Development',
+    description: 'Development and testing',
+    deviceCount: 45,
+    onlineCount: 38,
+    status: 'active',
+  },
+  {
+    id: '5',
+    name: 'Legacy Devices',
+    description: 'Older device fleet',
+    deviceCount: 280,
+    onlineCount: 192,
+    status: 'maintenance',
+  },
 ];
 
 export default function FleetsPage() {
@@ -53,7 +87,9 @@ export default function FleetsPage() {
                 <div className="text-right space-y-1">
                   <div className="flex items-center space-x-2">
                     <span className="h-2 w-2 rounded-full bg-success-500" />
-                    <span className="text-sm font-medium text-gray-900">{fleet.onlineCount} online</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {fleet.onlineCount} online
+                    </span>
                   </div>
                   <Badge variant={fleet.status === 'active' ? 'success' : 'warning'}>
                     {fleet.status}
@@ -78,4 +114,3 @@ export default function FleetsPage() {
     </div>
   );
 }
-

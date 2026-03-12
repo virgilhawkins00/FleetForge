@@ -1,19 +1,57 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { Plus, Search, Filter, MoreVertical } from 'lucide-react';
-import { Button, Card, CardContent, Badge, Input } from '@/components/ui';
+import { Button, Card, CardContent, Badge } from '@/components/ui';
 import { formatRelativeTime } from '@/lib/utils';
-import { api } from '@/lib/api';
 
 // Mock data
 const mockDevices = [
-  { id: '1', name: 'Gateway-001', type: 'gateway', status: 'online', fleetName: 'Production', lastSeen: new Date().toISOString(), firmwareVersion: 'v2.4.1' },
-  { id: '2', name: 'Sensor-042', type: 'sensor', status: 'online', fleetName: 'Production', lastSeen: new Date().toISOString(), firmwareVersion: 'v2.4.0' },
-  { id: '3', name: 'Gateway-015', type: 'gateway', status: 'offline', fleetName: 'Staging', lastSeen: new Date(Date.now() - 1000 * 60 * 60).toISOString(), firmwareVersion: 'v2.3.9' },
-  { id: '4', name: 'Edge-Node-003', type: 'edge', status: 'maintenance', fleetName: 'Development', lastSeen: new Date(Date.now() - 1000 * 60 * 30).toISOString(), firmwareVersion: 'v2.4.1' },
-  { id: '5', name: 'Sensor-089', type: 'sensor', status: 'online', fleetName: 'Production', lastSeen: new Date().toISOString(), firmwareVersion: 'v2.4.1' },
+  {
+    id: '1',
+    name: 'Gateway-001',
+    type: 'gateway',
+    status: 'online',
+    fleetName: 'Production',
+    lastSeen: new Date().toISOString(),
+    firmwareVersion: 'v2.4.1',
+  },
+  {
+    id: '2',
+    name: 'Sensor-042',
+    type: 'sensor',
+    status: 'online',
+    fleetName: 'Production',
+    lastSeen: new Date().toISOString(),
+    firmwareVersion: 'v2.4.0',
+  },
+  {
+    id: '3',
+    name: 'Gateway-015',
+    type: 'gateway',
+    status: 'offline',
+    fleetName: 'Staging',
+    lastSeen: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
+    firmwareVersion: 'v2.3.9',
+  },
+  {
+    id: '4',
+    name: 'Edge-Node-003',
+    type: 'edge',
+    status: 'maintenance',
+    fleetName: 'Development',
+    lastSeen: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+    firmwareVersion: 'v2.4.1',
+  },
+  {
+    id: '5',
+    name: 'Sensor-089',
+    type: 'sensor',
+    status: 'online',
+    fleetName: 'Production',
+    lastSeen: new Date().toISOString(),
+    firmwareVersion: 'v2.4.1',
+  },
 ];
 
 const statusVariant = (status: string): 'success' | 'warning' | 'danger' | 'default' => {
@@ -27,7 +65,7 @@ const statusVariant = (status: string): 'success' | 'warning' | 'danger' | 'defa
 
 export default function DevicesPage() {
   const [search, setSearch] = useState('');
-  const devices = mockDevices.filter(d => d.name.toLowerCase().includes(search.toLowerCase()));
+  const devices = mockDevices.filter((d) => d.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -52,7 +90,7 @@ export default function DevicesPage() {
                 type="search"
                 placeholder="Search devices..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => setSearch((e.target as HTMLInputElement).value)}
                 className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
               />
             </div>
@@ -70,13 +108,27 @@ export default function DevicesPage() {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fleet</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Firmware</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Seen</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Device
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Type
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Fleet
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Firmware
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Last Seen
+                </th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -86,15 +138,25 @@ export default function DevicesPage() {
                     <div className="font-medium text-gray-900">{device.name}</div>
                     <div className="text-sm text-gray-500">{device.id}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">{device.type}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 capitalize">
+                    {device.type}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <Badge variant={statusVariant(device.status)}>{device.status}</Badge>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.fleetName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{device.firmwareVersion}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{formatRelativeTime(device.lastSeen)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {device.fleetName}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {device.firmwareVersion}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {formatRelativeTime(device.lastSeen)}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <button className="text-gray-400 hover:text-gray-600"><MoreVertical className="h-5 w-5" /></button>
+                    <button className="text-gray-400 hover:text-gray-600">
+                      <MoreVertical className="h-5 w-5" />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -105,4 +167,3 @@ export default function DevicesPage() {
     </div>
   );
 }
-

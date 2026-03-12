@@ -36,22 +36,21 @@ export function ElectricBorder({
         const w = rect.width;
         const h = rect.height;
         const r = Math.min(borderRadius, w / 2, h / 2);
-        
+
         let d = `M ${r} 0 `;
         const segments = 60;
         const perimeter = 2 * (w + h - 4 * r) + 2 * Math.PI * r;
-        
+
         for (let i = 0; i <= segments; i++) {
           const t = i / segments;
           const pos = t * perimeter;
-          let x = 0, y = 0;
-          
+          let x = 0,
+            y = 0;
+
           const topStraight = w - 2 * r;
           const rightStraight = h - 2 * r;
-          const bottomStraight = w - 2 * r;
-          const leftStraight = h - 2 * r;
-          const cornerArc = Math.PI * r / 2;
-          
+          const cornerArc = (Math.PI * r) / 2;
+
           if (pos < topStraight) {
             x = r + pos;
             y = 0;
@@ -63,22 +62,25 @@ export function ElectricBorder({
             x = w;
             y = r + (pos - topStraight - cornerArc);
           } else {
-            x = w - (pos - topStraight - cornerArc - rightStraight) * (w / (perimeter - topStraight - cornerArc - rightStraight));
+            x =
+              w -
+              (pos - topStraight - cornerArc - rightStraight) *
+                (w / (perimeter - topStraight - cornerArc - rightStraight));
             y = h;
           }
-          
+
           const offset = Math.sin(time * 3 + t * 20) * chaos * 8;
           x += offset * (Math.random() - 0.5);
           y += offset * (Math.random() - 0.5);
-          
+
           d += `${i === 0 ? 'M' : 'L'} ${x} ${y} `;
         }
-        
+
         pathRef.current.setAttribute('d', d);
       }
       animationRef.current = requestAnimationFrame(animate);
     };
-    
+
     animate();
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
@@ -118,4 +120,3 @@ export function ElectricBorder({
     </div>
   );
 }
-

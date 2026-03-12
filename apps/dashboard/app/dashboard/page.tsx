@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'motion/react';
 import { Cpu, Layers, Rocket, AlertTriangle } from 'lucide-react';
 import { StatCard, DeviceStatusChart, RecentDeployments } from '@/components/dashboard';
 import { SplitText, AnimatedContent, RotatingText } from '@/components/reactbits';

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { motion, Variants, TargetAndTransition } from 'motion/react';
+import { motion, Variants } from 'motion/react';
 
 interface SplitTextProps {
   text: string;
@@ -73,4 +73,3 @@ export function SplitText({
     </motion.span>
   );
 }
-
