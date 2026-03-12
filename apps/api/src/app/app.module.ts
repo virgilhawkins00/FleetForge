@@ -20,6 +20,7 @@ import { LoggingModule } from './logging/logging.module';
 import { MetricsModule } from './metrics/metrics.module';
 import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
 import { CacheConfigModule } from './cache/cache.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -53,6 +54,8 @@ import { CacheConfigModule } from './cache/cache.module';
     MetricsModule,
     // Caching
     CacheConfigModule,
+    // Audit Logging
+    AuditModule,
     // Feature modules
     AuthModule,
     DevicesModule,
