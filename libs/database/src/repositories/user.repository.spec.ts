@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';
 import { UserRepository } from './user.repository';
 import { UserModel } from '../schemas/user.schema';
-import { UserRole, Permission } from '@fleetforge/security';
+import { UserRole, Permission } from '@fleetforge/core';
 
 describe('UserRepository', () => {
   let repository: UserRepository;

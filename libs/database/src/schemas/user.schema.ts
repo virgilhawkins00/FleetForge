@@ -4,7 +4,7 @@
 
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { UserRole, Permission } from '@fleetforge/security';
+import { UserRole, Permission } from '@fleetforge/core';
 
 export type UserDocument = UserModel & Document;
 

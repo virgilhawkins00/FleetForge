@@ -2,7 +2,7 @@
  * User Mapper - Converts between domain User and persistence UserModel
  */
 
-import { UserRole, Permission } from '@fleetforge/security';
+import { UserRole, Permission } from '@fleetforge/core';
 
 export interface User {
   id: string;
@@ -110,4 +110,3 @@ export class UserMapper {
     return persistenceArray.map((p) => this.toDomain(p));
   }
 }
-

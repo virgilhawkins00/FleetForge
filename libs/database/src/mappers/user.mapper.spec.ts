@@ -1,5 +1,5 @@
 import { UserMapper, User, UserPersistence } from './user.mapper';
-import { UserRole, Permission } from '@fleetforge/security';
+import { UserRole, Permission } from '@fleetforge/core';
 
 describe('UserMapper', () => {
   const mockDate = new Date('2024-01-15T10:00:00Z');
@@ -114,4 +114,3 @@ describe('UserMapper', () => {
     });
   });
 });
-
