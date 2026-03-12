@@ -200,8 +200,14 @@
   - TracingInterceptor for HTTP requests
   - Custom decorators (@Span, @SpanDatabase, @SpanExternalService, @SpanCache, @SpanMessageQueue)
   - Auto-instrumentation for HTTP, MongoDB, Redis
-- [ ] Grafana dashboards
-- [ ] Alerting (PagerDuty/Slack)
+- [x] Grafana dashboards
+  - API Overview dashboard (requests, latency, errors, memory)
+  - Tracing Overview dashboard (traces browser, span metrics)
+  - Prometheus + Jaeger datasource provisioning
+- [x] Alerting (Alertmanager)
+  - Error rate, latency, memory alerts
+  - Route configuration by severity
+  - Webhook + Slack integration ready
 
 ## Phase 7: Ecosystem & Community
 
