@@ -10,7 +10,15 @@ import { GCPFirmwareService } from '../gcp/gcp-firmware.service';
 @Module({
   imports: [DatabaseModule, ConfigModule],
   controllers: [FirmwareController],
-  providers: [FirmwareService, StorageService, FirmwareValidationService, GCPFirmwareService],
+  providers: [
+    FirmwareService,
+    StorageService,
+    FirmwareValidationService,
+    GCPFirmwareService,
+    // Provide GCP_ENABLED as false by default for standalone usage
+    // When GcpModule is imported globally, it will override this
+    { provide: 'GCP_ENABLED', useValue: false },
+  ],
   exports: [FirmwareService, StorageService, FirmwareValidationService],
 })
 export class FirmwareModule {}
