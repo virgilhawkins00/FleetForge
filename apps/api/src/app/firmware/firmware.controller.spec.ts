@@ -230,7 +230,7 @@ describe('FirmwareController', () => {
         set: jest.fn(),
       } as any;
 
-      const result = await controller.downloadFirmware('path/to/fw.bin', mockRes);
+      const result = await controller.downloadFirmware(['path', 'to', 'fw.bin'], mockRes);
 
       expect(result).toBeInstanceOf(StreamableFile);
       expect(mockRes.set).toHaveBeenCalledWith(
