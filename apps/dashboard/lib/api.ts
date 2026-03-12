@@ -31,12 +31,24 @@ class ApiClient {
           }
         }
         return Promise.reject(error);
-      }
+      },
     );
   }
 
   // Auth
   async login(email: string, password: string) {
+    // Demo mode - bypass API for demo@fleetforge.io
+    if (email === 'demo@fleetforge.io' && password === 'demo123') {
+      return {
+        user: {
+          id: 'demo-user-001',
+          name: 'Demo User',
+          email: 'demo@fleetforge.io',
+          role: 'admin',
+        },
+        accessToken: 'demo-token-fleetforge-2026',
+      };
+    }
     const { data } = await this.client.post('/auth/login', { email, password });
     return data;
   }
@@ -122,4 +134,3 @@ class ApiClient {
 }
 
 export const api = new ApiClient();
-

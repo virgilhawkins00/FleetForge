@@ -13,6 +13,7 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
 import { MtlsGuard } from './guards/mtls.guard';
+import { TenantGuard } from './guards/tenant.guard';
 import { RateLimitInterceptor } from './interceptors/rate-limit.interceptor';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
 import { MtlsService } from './services/mtls.service';
@@ -82,6 +83,7 @@ export class SecurityModule {
           new MtlsGuard(reflector, mtlsService),
         inject: [Reflector, MtlsService],
       },
+      TenantGuard,
 
       // Interceptors
       RateLimitInterceptor,
@@ -135,6 +137,7 @@ export class SecurityModule {
         RolesGuard,
         PermissionsGuard,
         MtlsGuard,
+        TenantGuard,
         RateLimitInterceptor,
         LoggingInterceptor,
         SECURITY_OPTIONS,
@@ -198,6 +201,7 @@ export class SecurityModule {
           new MtlsGuard(reflector, mtlsService),
         inject: [Reflector, MtlsService],
       },
+      TenantGuard,
 
       // Interceptors
       RateLimitInterceptor,
@@ -218,6 +222,7 @@ export class SecurityModule {
         RolesGuard,
         PermissionsGuard,
         MtlsGuard,
+        TenantGuard,
         RateLimitInterceptor,
         LoggingInterceptor,
         SECURITY_OPTIONS,

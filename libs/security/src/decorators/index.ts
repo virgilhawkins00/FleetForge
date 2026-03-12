@@ -69,3 +69,6 @@ export const RequireOrganization = (orgIdParam: string = 'organizationId') =>
 
 // mTLS Decorators
 export * from './mtls.decorator';
+
+// Tenant Decorators (Multi-tenancy)
+export * from './tenant.decorator';

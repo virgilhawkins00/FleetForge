@@ -22,6 +22,8 @@ import {
   TelemetrySchema,
   UserModel,
   UserSchema,
+  OrganizationModel,
+  OrganizationSchema,
 } from './schemas';
 import {
   DeviceRepository,
@@ -32,6 +34,7 @@ import {
   DeploymentRepository,
   TelemetryRepository,
   UserRepository,
+  OrganizationRepository,
 } from './repositories';
 
 export interface DatabaseModuleOptions {
@@ -48,6 +51,7 @@ const SCHEMAS = [
   { name: DeploymentModel.name, schema: DeploymentSchema },
   { name: TelemetryModel.name, schema: TelemetrySchema },
   { name: UserModel.name, schema: UserSchema },
+  { name: OrganizationModel.name, schema: OrganizationSchema },
 ];
 
 const REPOSITORIES = [
@@ -59,6 +63,7 @@ const REPOSITORIES = [
   DeploymentRepository,
   TelemetryRepository,
   UserRepository,
+  OrganizationRepository,
 ];
 
 @Global()

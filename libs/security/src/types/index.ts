@@ -54,6 +54,8 @@ export interface IJwtPayload {
   role: UserRole;
   permissions: Permission[];
   type: 'user' | 'device';
+  organizationId?: string; // Tenant ID for multi-tenancy
+  organizationPlan?: string; // Plan for quota checking
   iat?: number;
   exp?: number;
 }
@@ -64,6 +66,19 @@ export interface IAuthUser {
   role: UserRole;
   permissions: Permission[];
   organizationId?: string;
+  organizationName?: string;
+  organizationPlan?: string;
+}
+
+export interface ITenantContext {
+  organizationId: string;
+  organizationName?: string;
+  plan: string;
+  quotas: {
+    maxDevices: number;
+    maxFleets: number;
+    maxUsers: number;
+  };
 }
 
 export interface IAuthDevice {
@@ -142,4 +157,3 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ],
   [UserRole.DEVICE]: [Permission.TELEMETRY_WRITE, Permission.FIRMWARE_READ],
 };
-

@@ -10,3 +10,4 @@ export * from './firmware.schema';
 export * from './deployment.schema';
 export * from './telemetry.schema';
 export * from './user.schema';
+export * from './organization.schema';

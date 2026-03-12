@@ -10,3 +10,4 @@ export * from './firmware.mapper';
 export * from './deployment.mapper';
 export * from './telemetry.mapper';
 export * from './user.mapper';
+export * from './organization.mapper';

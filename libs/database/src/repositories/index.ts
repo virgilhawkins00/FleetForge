@@ -10,3 +10,4 @@ export * from './firmware.repository';
 export * from './deployment.repository';
 export * from './telemetry.repository';
 export * from './user.repository';
+export * from './organization.repository';
