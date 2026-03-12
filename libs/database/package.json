@@ -18,22 +18,6 @@
     "mongoose": "^8.0.0"
   },
   "dependencies": {
-    "@nestjs/cli": "11.0.16",
-    "@nestjs/core": "11.1.16",
-    "@nestjs/microservices": "11.1.16",
-    "@nestjs/platform-express": "11.1.16",
-    "@nestjs/schematics": "7.3.1",
-    "@nestjs/swagger": "11.2.6",
-    "@nestjs/testing": "11.1.16",
-    "@nx/eslint": "22.5.4",
-    "@nx/jest": "22.5.4",
-    "@nx/js": "22.5.4",
-    "@nx/nest": "22.5.4",
-    "@nx/node": "22.5.4",
-    "@nx/workspace": "22.5.4",
-    "@typescript-eslint/eslint-plugin": "8.57.0",
-    "@typescript-eslint/parser": "8.57.0",
-    "next": "14.2.35",
-    "nx": "22.5.4"
+    "@fleetforge/core": "^0.1.0"
   }
 }
