@@ -1,0 +1,84 @@
+groups:
+  - name: fleetforge-api
+    rules:
+      # High Error Rate
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m])) 
+          / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High HTTP error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      # High Response Time
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency detected"
+          description: "95th percentile latency is {{ $value | humanizeDuration }}"
+
+      # API Down
+      - alert: APIDown
+        expr: up{job="fleetforge-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "FleetForge API is down"
+          description: "The API has been unreachable for more than 1 minute"
+
+      # High Memory Usage
+      - alert: HighMemoryUsage
+        expr: |
+          process_resident_memory_bytes{job="fleetforge-api"} 
+          / 1024 / 1024 / 1024 > 1.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanize }}GB"
+
+      # Too Many Open Connections
+      - alert: TooManyConnections
+        expr: |
+          sum(rate(http_requests_total[1m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate detected"
+          description: "Request rate is {{ $value | humanize }} req/s"
+
+  - name: deployment-alerts
+    rules:
+      # Deployment Failures
+      - alert: DeploymentFailures
+        expr: |
+          increase(deployment_failures_total[1h]) > 5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Multiple deployment failures detected"
+          description: "{{ $value }} deployments failed in the last hour"
+
+      # Device Offline
+      - alert: DevicesOffline
+        expr: |
+          sum(device_status{status="offline"}) 
+          / sum(device_status) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Many devices offline"
+          description: "{{ $value | humanizePercentage }} of devices are offline"
+
