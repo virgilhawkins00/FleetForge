@@ -268,8 +268,12 @@
   - [x] StorageService for firmware artifacts (OTA)
   - [x] BigQueryService for analytics and long-term storage
   - [x] GCPModule unified interface
-  - [ ] Integration with @fleetforge/api
-  - [ ] MQTT-to-Pub/Sub bridge
+  - [x] Integration with @fleetforge/api (GcpModule in apps/api)
+  - [x] MQTT-to-Pub/Sub bridge (apps/mqtt-gateway)
+    - [x] Aedes 1.x MQTT broker
+    - [x] MqttBrokerService with device authentication
+    - [x] MqttBridgeService for GCP Pub/Sub forwarding
+    - [x] HTTP API for gateway management
 - [ ] Azure IoT Hub integration
 
 ### Enterprise Features

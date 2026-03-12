@@ -1,0 +1,55 @@
+{
+  "name": "mqtt-gateway",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/mqtt-gateway/src",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/webpack:webpack",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "target": "node",
+        "compiler": "tsc",
+        "outputPath": "dist/apps/mqtt-gateway",
+        "main": "apps/mqtt-gateway/src/main.ts",
+        "tsConfig": "apps/mqtt-gateway/tsconfig.app.json",
+        "webpackConfig": "apps/mqtt-gateway/webpack.config.js"
+      },
+      "configurations": {
+        "development": {
+          "optimization": false,
+          "sourceMap": true
+        },
+        "production": {
+          "optimization": true,
+          "extractLicenses": true,
+          "inspect": false
+        }
+      }
+    },
+    "serve": {
+      "executor": "@nx/js:node",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "mqtt-gateway:build"
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "mqtt-gateway:build:development"
+        },
+        "production": {
+          "buildTarget": "mqtt-gateway:build:production"
+        }
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/{projectRoot}"],
+      "options": {
+        "jestConfig": "apps/mqtt-gateway/jest.config.ts"
+      }
+    }
+  },
+  "tags": ["scope:iot", "type:gateway"]
+}

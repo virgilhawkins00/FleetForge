@@ -27,7 +27,9 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
+      "@/*": ["apps/dashboard/*"],
       "@fleetforge/ai": ["libs/ai/src/index.ts"],
+      "@fleetforge/cli": ["apps/cli/src/index.ts"],
       "@fleetforge/core": ["libs/core/src/index.ts"],
       "@fleetforge/database": ["libs/database/src/index.ts"],
       "@fleetforge/digital-twin": ["libs/digital-twin/src/index.ts"],
@@ -38,9 +40,7 @@
       "@fleetforge/sdk": ["libs/sdk/src/index.ts"],
       "@fleetforge/security": ["libs/security/src/index.ts"],
       "@fleetforge/telemetry": ["libs/telemetry/src/index.ts"],
-      "@fleetforge/testing": ["libs/testing/src/index.ts"],
-      "@fleetforge/cli": ["apps/cli/src/index.ts"],
-      "@/*": ["apps/dashboard/*"]
+      "@fleetforge/testing": ["libs/testing/src/index.ts"]
     }
   },
   "exclude": ["node_modules", "tmp"]
