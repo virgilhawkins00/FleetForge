@@ -33,5 +33,6 @@ export default {
     'device.repository.spec.ts',
     'telemetry.repository.spec.ts',
     'database.module.spec.ts',
+    'user.mapper.spec.ts',
   ],
 };
