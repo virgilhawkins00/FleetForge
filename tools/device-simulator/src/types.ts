@@ -26,6 +26,8 @@ export interface TelemetryData {
 export interface SimulatorConfig {
   apiUrl: string;
   wsUrl: string;
+  mqttUrl?: string; // MQTT broker URL (e.g., mqtt://localhost:1883)
+  protocol: 'websocket' | 'mqtt'; // Transport protocol
   token?: string;
   deviceCount: number;
   telemetryIntervalMs: number;
@@ -49,4 +51,3 @@ export interface SimulatorStats {
   uptime: number;
   startTime: Date;
 }
-

@@ -17,14 +17,16 @@ const stats: SimulatorStats = {
 const devices: SimulatedDevice[] = [];
 
 function printBanner(): void {
-  console.log(chalk.cyan(`
+  console.log(
+    chalk.cyan(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
 ║   ${chalk.bold('FleetForge Device Simulator')}                            ║
 ║   ${chalk.gray('Simulate IoT devices for testing and development')}       ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
-`));
+`),
+  );
 }
 
 function printStats(): void {
@@ -38,8 +40,13 @@ function printStats(): void {
 
 async function runSimulator(config: SimulatorConfig): Promise<void> {
   printBanner();
+  console.log(chalk.gray(`Protocol: ${config.protocol.toUpperCase()}`));
   console.log(chalk.gray(`API URL: ${config.apiUrl}`));
-  console.log(chalk.gray(`WebSocket: ${config.wsUrl}`));
+  if (config.protocol === 'mqtt') {
+    console.log(chalk.gray(`MQTT Broker: ${config.mqttUrl || 'mqtt://localhost:1883'}`));
+  } else {
+    console.log(chalk.gray(`WebSocket: ${config.wsUrl}`));
+  }
   console.log(chalk.gray(`Device Type: ${config.deviceType}`));
   console.log(chalk.gray(`Device Count: ${config.deviceCount}`));
   console.log(chalk.gray(`Telemetry Interval: ${config.telemetryIntervalMs}ms\n`));
@@ -48,8 +55,12 @@ async function runSimulator(config: SimulatorConfig): Promise<void> {
   console.log(chalk.yellow('Creating simulated devices...'));
   for (let i = 0; i < config.deviceCount; i++) {
     const device = new SimulatedDevice(config, i + 1, {
-      onTelemetry: () => { stats.telemetrySent++; },
-      onError: () => { stats.errors++; },
+      onTelemetry: () => {
+        stats.telemetrySent++;
+      },
+      onError: () => {
+        stats.errors++;
+      },
     });
     devices.push(device);
     stats.devicesCreated++;
@@ -63,22 +74,21 @@ async function runSimulator(config: SimulatorConfig): Promise<void> {
       try {
         await device.register();
         console.log(chalk.green(`  ✓ ${device.getConfig().name} registered`));
-      } catch (error) {
+      } catch {
         console.log(chalk.red(`  ✗ ${device.getConfig().name} failed`));
       }
     }
   }
 
-  // Connect WebSocket (optional)
-  if (config.wsUrl && config.token) {
-    console.log(chalk.yellow('\nConnecting to WebSocket...'));
-    for (const device of devices) {
-      try {
-        await device.connect();
-        console.log(chalk.green(`  ✓ ${device.getConfig().name} connected`));
-      } catch {
-        console.log(chalk.yellow(`  ○ ${device.getConfig().name} skipped (no WS)`));
-      }
+  // Connect based on protocol
+  const protocolLabel = config.protocol === 'mqtt' ? 'MQTT Broker' : 'WebSocket';
+  console.log(chalk.yellow(`\nConnecting to ${protocolLabel}...`));
+  for (const device of devices) {
+    try {
+      await device.connect();
+      console.log(chalk.green(`  ✓ ${device.getConfig().name} connected`));
+    } catch {
+      console.log(chalk.yellow(`  ○ ${device.getConfig().name} skipped`));
     }
   }
 
@@ -115,8 +125,10 @@ program
 program
   .command('start')
   .description('Start the device simulator')
+  .option('-p, --protocol <protocol>', 'Transport protocol (websocket|mqtt)', 'mqtt')
   .option('-u, --api-url <url>', 'API URL', 'http://localhost:3100')
   .option('-w, --ws-url <url>', 'WebSocket URL', 'ws://localhost:3100')
+  .option('-m, --mqtt-url <url>', 'MQTT Broker URL', 'mqtt://localhost:1883')
   .option('-t, --token <token>', 'Authentication token')
   .option('-n, --count <number>', 'Number of devices to simulate', '5')
   .option('-i, --interval <ms>', 'Telemetry interval in ms', '5000')
@@ -125,8 +137,10 @@ program
   .option('-v, --verbose', 'Enable verbose logging', false)
   .action(async (options) => {
     const config: SimulatorConfig = {
+      protocol: options.protocol as 'websocket' | 'mqtt',
       apiUrl: options.apiUrl,
       wsUrl: options.wsUrl,
+      mqttUrl: options.mqttUrl,
       token: options.token,
       deviceCount: parseInt(options.count, 10),
       telemetryIntervalMs: parseInt(options.interval, 10),
@@ -138,13 +152,38 @@ program
   });
 
 program
+  .command('mqtt')
+  .description('Start simulator with MQTT protocol (connects to mqtt-gateway)')
+  .option('-m, --mqtt-url <url>', 'MQTT Broker URL', 'mqtt://localhost:1883')
+  .option('-n, --count <number>', 'Number of devices', '3')
+  .option('-i, --interval <ms>', 'Telemetry interval', '3000')
+  .option('-T, --type <type>', 'Device type', 'sensor')
+  .option('-v, --verbose', 'Verbose logging', false)
+  .action(async (options) => {
+    const config: SimulatorConfig = {
+      protocol: 'mqtt',
+      apiUrl: 'http://localhost:3100',
+      wsUrl: '',
+      mqttUrl: options.mqttUrl,
+      deviceCount: parseInt(options.count, 10),
+      telemetryIntervalMs: parseInt(options.interval, 10),
+      deviceType: options.type as DeviceConfig['type'],
+      verbose: options.verbose,
+    };
+    await runSimulator(config);
+  });
+
+program
   .command('test')
   .description('Run a quick test with 2 devices for 30 seconds')
+  .option('-p, --protocol <protocol>', 'Protocol (websocket|mqtt)', 'mqtt')
   .option('-u, --api-url <url>', 'API URL', 'http://localhost:3100')
   .action(async (options) => {
     const config: SimulatorConfig = {
+      protocol: options.protocol as 'websocket' | 'mqtt',
       apiUrl: options.apiUrl,
-      wsUrl: '',
+      wsUrl: 'ws://localhost:3100',
+      mqttUrl: 'mqtt://localhost:1883',
       deviceCount: 2,
       telemetryIntervalMs: 2000,
       deviceType: 'sensor',
@@ -155,4 +194,3 @@ program
   });
 
 program.parse();
-
