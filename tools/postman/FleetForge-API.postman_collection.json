@@ -1,0 +1,455 @@
+{
+  "info": {
+    "name": "FleetForge API",
+    "description": "Complete API collection for the FleetForge IoT Fleet Management Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "fleetforge"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:3100" },
+    { "key": "access_token", "value": "" },
+    { "key": "refresh_token", "value": "" },
+    { "key": "device_id", "value": "" },
+    { "key": "fleet_id", "value": "" },
+    { "key": "deployment_id", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"name\": \"Test User\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
+            }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.accessToken) { pm.collectionVariables.set('access_token', jsonData.accessToken); }",
+                  "if (jsonData.refreshToken) { pm.collectionVariables.set('refresh_token', jsonData.refreshToken); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePass123!\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "Get Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/auth/profile",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "profile"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Devices",
+      "item": [
+        {
+          "name": "List Devices",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices?page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Device",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('device_id', jsonData.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test Device\",\n  \"type\": \"sensor\",\n  \"firmwareVersion\": \"v2.4.1\",\n  \"capabilities\": [\"telemetry\", \"ota\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices"]
+            }
+          }
+        },
+        {
+          "name": "Get Device",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Update Device",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Device Name\",\n  \"status\": \"active\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Device",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/devices/{{device_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "devices", "{{device_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Fleets",
+      "item": [
+        {
+          "name": "List Fleets",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fleets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fleets"]
+            }
+          }
+        },
+        {
+          "name": "Create Fleet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('fleet_id', jsonData.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Production Fleet\",\n  \"description\": \"Main production device fleet\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/fleets",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fleets"]
+            }
+          }
+        },
+        {
+          "name": "Get Fleet",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fleets/{{fleet_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fleets", "{{fleet_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Add Device to Fleet",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{device_id}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/fleets/{{fleet_id}}/devices",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fleets", "{{fleet_id}}", "devices"]
+            }
+          }
+        },
+        {
+          "name": "Delete Fleet",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/fleets/{{fleet_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "fleets", "{{fleet_id}}"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Deployments",
+      "item": [
+        {
+          "name": "List Deployments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/deployments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments"]
+            }
+          }
+        },
+        {
+          "name": "Create Deployment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) { pm.collectionVariables.set('deployment_id', jsonData.id); }"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fleetId\": \"{{fleet_id}}\",\n  \"firmwareVersion\": \"v2.5.0\",\n  \"strategy\": \"rolling\",\n  \"rolloutPercentage\": 10\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/deployments",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments"]
+            }
+          }
+        },
+        {
+          "name": "Get Deployment Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/deployments/{{deployment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments", "{{deployment_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Pause Deployment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/deployments/{{deployment_id}}/pause",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments", "{{deployment_id}}", "pause"]
+            }
+          }
+        },
+        {
+          "name": "Resume Deployment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/deployments/{{deployment_id}}/resume",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments", "{{deployment_id}}", "resume"]
+            }
+          }
+        },
+        {
+          "name": "Rollback Deployment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/deployments/{{deployment_id}}/rollback",
+              "host": ["{{base_url}}"],
+              "path": ["api", "deployments", "{{deployment_id}}", "rollback"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telemetry",
+      "item": [
+        {
+          "name": "Send Telemetry",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"deviceId\": \"{{device_id}}\",\n  \"timestamp\": \"{{$isoTimestamp}}\",\n  \"metrics\": {\n    \"cpu\": 45.2,\n    \"memory\": 62.8,\n    \"temperature\": 42.1\n  }\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/telemetry",
+              "host": ["{{base_url}}"],
+              "path": ["api", "telemetry"]
+            }
+          }
+        },
+        {
+          "name": "Get Device Telemetry",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/telemetry/device/{{device_id}}?limit=100",
+              "host": ["{{base_url}}"],
+              "path": ["api", "telemetry", "device", "{{device_id}}"],
+              "query": [{ "key": "limit", "value": "100" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/health", "host": ["{{base_url}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "Readiness",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/ready",
+              "host": ["{{base_url}}"],
+              "path": ["health", "ready"]
+            }
+          }
+        },
+        {
+          "name": "Detailed",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health/detailed",
+              "host": ["{{base_url}}"],
+              "path": ["health", "detailed"]
+            }
+          }
+        },
+        {
+          "name": "Metrics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/metrics", "host": ["{{base_url}}"], "path": ["metrics"] }
+          }
+        }
+      ]
+    }
+  ]
+}

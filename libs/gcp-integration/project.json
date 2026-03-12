@@ -1,0 +1,35 @@
+{
+  "name": "gcp-integration",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/gcp-integration/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/gcp-integration",
+        "main": "libs/gcp-integration/src/index.ts",
+        "tsConfig": "libs/gcp-integration/tsconfig.lib.json",
+        "assets": ["libs/gcp-integration/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/gcp-integration/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/gcp-integration"],
+      "options": {
+        "jestConfig": "libs/gcp-integration/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:libs", "type:integration", "cloud:gcp"]
+}
+

@@ -1,0 +1,35 @@
+{
+  "name": "@fleetforge/cli",
+  "version": "0.1.0",
+  "description": "FleetForge CLI - Manage IoT devices, fleets, and deployments",
+  "license": "MIT",
+  "author": "FleetForge Team",
+  "bin": {
+    "fleetforge": "./dist/main.js"
+  },
+  "main": "./dist/main.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "fleetforge",
+    "iot",
+    "cli",
+    "device-management",
+    "fleet-management"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/FleetForge"
+  },
+  "dependencies": {
+    "commander": "^12.0.0",
+    "chalk": "^4.1.2",
+    "ora": "^5.4.1",
+    "inquirer": "^8.2.6",
+    "conf": "^10.2.0",
+    "axios": "^1.6.0",
+    "cli-table3": "^0.6.3"
+  }
+}
+

@@ -31,13 +31,16 @@
       "@fleetforge/core": ["libs/core/src/index.ts"],
       "@fleetforge/database": ["libs/database/src/index.ts"],
       "@fleetforge/digital-twin": ["libs/digital-twin/src/index.ts"],
+      "@fleetforge/gcp-integration": ["libs/gcp-integration/src/index.ts"],
       "@fleetforge/mqtt-client": ["libs/mqtt-client/src/index.ts"],
       "@fleetforge/ota": ["libs/ota/src/index.ts"],
       "@fleetforge/ota-client": ["libs/ota-client/src/index.ts"],
       "@fleetforge/sdk": ["libs/sdk/src/index.ts"],
       "@fleetforge/security": ["libs/security/src/index.ts"],
       "@fleetforge/telemetry": ["libs/telemetry/src/index.ts"],
-      "@fleetforge/testing": ["libs/testing/src/index.ts"]
+      "@fleetforge/testing": ["libs/testing/src/index.ts"],
+      "@fleetforge/cli": ["apps/cli/src/index.ts"],
+      "@/*": ["apps/dashboard/*"]
     }
   },
   "exclude": ["node_modules", "tmp"]
