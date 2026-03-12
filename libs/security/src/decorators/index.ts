@@ -66,3 +66,6 @@ export const RequireDevice = () => SetMetadata('requireDevice', true);
  */
 export const RequireOrganization = (orgIdParam: string = 'organizationId') =>
   SetMetadata('requireOrganization', orgIdParam);
+
+// mTLS Decorators
+export * from './mtls.decorator';

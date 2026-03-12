@@ -12,8 +12,10 @@ import { SignatureValidationService } from './services/signature-validation.serv
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
+import { MtlsGuard } from './guards/mtls.guard';
 import { RateLimitInterceptor } from './interceptors/rate-limit.interceptor';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { MtlsService } from './services/mtls.service';
 
 export interface SecurityModuleOptions {
   jwt: IJwtServiceConfig;
@@ -63,6 +65,7 @@ export class SecurityModule {
       },
       EncryptionService,
       SignatureValidationService,
+      MtlsService,
 
       // Guards (for manual injection)
       {
@@ -73,6 +76,12 @@ export class SecurityModule {
       },
       RolesGuard,
       PermissionsGuard,
+      {
+        provide: MtlsGuard,
+        useFactory: (reflector: Reflector, mtlsService: MtlsService) =>
+          new MtlsGuard(reflector, mtlsService),
+        inject: [Reflector, MtlsService],
+      },
 
       // Interceptors
       RateLimitInterceptor,
@@ -121,9 +130,11 @@ export class SecurityModule {
         PasswordService,
         EncryptionService,
         SignatureValidationService,
+        MtlsService,
         JwtAuthGuard,
         RolesGuard,
         PermissionsGuard,
+        MtlsGuard,
         RateLimitInterceptor,
         LoggingInterceptor,
         SECURITY_OPTIONS,
@@ -170,6 +181,7 @@ export class SecurityModule {
       },
       EncryptionService,
       SignatureValidationService,
+      MtlsService,
 
       // Guards (for manual injection)
       {
@@ -180,6 +192,12 @@ export class SecurityModule {
       },
       RolesGuard,
       PermissionsGuard,
+      {
+        provide: MtlsGuard,
+        useFactory: (reflector: Reflector, mtlsService: MtlsService) =>
+          new MtlsGuard(reflector, mtlsService),
+        inject: [Reflector, MtlsService],
+      },
 
       // Interceptors
       RateLimitInterceptor,
@@ -195,9 +213,11 @@ export class SecurityModule {
         PasswordService,
         EncryptionService,
         SignatureValidationService,
+        MtlsService,
         JwtAuthGuard,
         RolesGuard,
         PermissionsGuard,
+        MtlsGuard,
         RateLimitInterceptor,
         LoggingInterceptor,
         SECURITY_OPTIONS,
