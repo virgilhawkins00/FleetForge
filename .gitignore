@@ -124,4 +124,6 @@ device-certs/
 .vercel
 .netlify
 
+# Local files (not for git)
 ROADMAP.md
+scripts/publish-libs.sh
