@@ -170,6 +170,41 @@ describe('IsolationForest', () => {
       const score = tinyForest.score([1]);
       expect(score).toBeDefined();
     });
+
+    it('should handle identical feature values (creates leaf node)', () => {
+      const uniformForest = new IsolationForest({
+        numTrees: 5,
+        sampleSize: 10,
+        maxDepth: 5,
+        contamination: 0.1,
+      });
+
+      // All samples have identical values for all features
+      // This triggers the minValue === maxValue branch in isolation-tree.ts
+      const data = Array.from({ length: 20 }, () => [5, 5, 5]);
+      uniformForest.train(data);
+
+      const score = uniformForest.score([5, 5, 5]);
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(1);
+    });
+
+    it('should handle data with some identical feature columns', () => {
+      const mixedForest = new IsolationForest({
+        numTrees: 10,
+        sampleSize: 20,
+        maxDepth: 5,
+        contamination: 0.1,
+      });
+
+      // First column varies, second and third are identical
+      const data = Array.from({ length: 30 }, (_, i) => [i, 10, 10]);
+      mixedForest.train(data);
+
+      const score = mixedForest.score([15, 10, 10]);
+      expect(score).toBeGreaterThanOrEqual(0);
+      expect(score).toBeLessThanOrEqual(1);
+    });
   });
 });
 
