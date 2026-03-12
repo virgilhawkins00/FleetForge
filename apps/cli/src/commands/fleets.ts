@@ -1,5 +1,5 @@
 import { Command } from 'commander';
-import { apiGet, apiPost, apiPatch, apiDelete } from '../api/client';
+import { apiGet, apiPost, apiDelete } from '../api/client';
 import { success, error, table, json, spinner, formatStatus, formatDate } from '../utils/output';
 
 interface Fleet {
@@ -50,7 +50,7 @@ export function registerFleetsCommand(program: Command): void {
             f.deviceCount.toString(),
             formatStatus(f.status),
             formatDate(f.createdAt),
-          ])
+          ]),
         );
         success(`Total: ${data.total} fleets`);
       } catch (err) {
@@ -162,4 +162,3 @@ export function registerFleetsCommand(program: Command): void {
       }
     });
 }
-

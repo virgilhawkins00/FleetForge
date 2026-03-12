@@ -40,7 +40,7 @@ export function registerAuthCommand(program: Command): void {
             type: 'input',
             name: 'email',
             message: 'Email:',
-            validate: (input) => input.includes('@') || 'Please enter a valid email',
+            validate: (input: string) => input.includes('@') || 'Please enter a valid email',
           },
           {
             type: 'password',
@@ -120,4 +120,3 @@ export function registerAuthCommand(program: Command): void {
       program.parse(['node', 'fleetforge', 'auth', 'whoami']);
     });
 }
-
