@@ -21,6 +21,8 @@ import { MetricsModule } from './metrics/metrics.module';
 import { HttpMetricsInterceptor } from './metrics/http-metrics.interceptor';
 import { CacheConfigModule } from './cache/cache.module';
 import { AuditModule } from './audit/audit.module';
+import { TracingModule } from './tracing/tracing.module';
+import { TracingInterceptor } from './tracing/tracing.interceptor';
 
 @Module({
   imports: [
@@ -49,9 +51,10 @@ import { AuditModule } from './audit/audit.module';
         },
       }),
     }),
-    // Observability - Health Checks & Metrics
+    // Observability - Health Checks, Metrics & Tracing
     HealthModule,
     MetricsModule,
+    TracingModule,
     // Caching
     CacheConfigModule,
     // Audit Logging
@@ -79,6 +82,11 @@ import { AuditModule } from './audit/audit.module';
     {
       provide: APP_INTERCEPTOR,
       useClass: HttpMetricsInterceptor,
+    },
+    // Global Tracing Interceptor
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: TracingInterceptor,
     },
   ],
 })
