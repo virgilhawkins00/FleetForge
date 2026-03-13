@@ -1,13 +1,15 @@
 # FleetForge 🚀
 
-**Enterprise-grade IoT Fleet Management Platform with Secure OTA Updates**
+**Enterprise-grade IoT Fleet Management Platform with Multi-Cloud Support**
 
+[![CI](https://github.com/virgilhawkins00/FleetForge/actions/workflows/ci.yml/badge.svg)](https://github.com/virgilhawkins00/FleetForge/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue.svg)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.3-red.svg)](https://nestjs.com/)
-[![Test Coverage](https://img.shields.io/badge/coverage-80%25+-brightgreen.svg)](https://github.com/yourusername/FleetForge)
+[![Test Coverage](https://img.shields.io/badge/coverage-93%25+-brightgreen.svg)](https://github.com/virgilhawkins00/FleetForge)
+[![npm](https://img.shields.io/npm/v/@fleetforgeio/core.svg)](https://www.npmjs.com/package/@fleetforgeio/core)
 
-> **FleetForge** is an open-source, production-ready backend platform built with NestJS for managing massive IoT device fleets. It goes beyond simple telemetry ingestion to solve the critical pain point of **secure Over-The-Air (OTA) firmware updates**, remote configuration, and fleet health monitoring.
+> **FleetForge** is an open-source, production-ready backend platform built with NestJS for managing massive IoT device fleets. It provides **multi-cloud support** (AWS IoT Core, Azure IoT Hub, GCP Pub/Sub), **secure OTA firmware updates**, **digital twin** state synchronization, and **predictive maintenance** using Edge AI.
 
 ---
 
@@ -32,19 +34,22 @@ FleetForge follows **Hexagonal Architecture** (Ports & Adapters) with **Domain-D
 
 ```
 FleetForge/
-├── apps/                    # Microservices
-│   ├── api/                # Main REST/GraphQL API
-│   ├── mqtt-gateway/       # MQTT Telemetry Ingestion
-│   ├── ota-service/        # OTA Update Management
-│   └── ai-service/         # Predictive Maintenance
-├── libs/                    # Publishable NPM Libraries
-│   ├── core/               # @fleetforge/core - Domain Models
-│   ├── mqtt-client/        # @fleetforge/mqtt-client
-│   ├── ota-client/         # @fleetforge/ota-client
-│   ├── sdk/                # @fleetforge/sdk
-│   ├── security/           # Crypto & Digital Signatures
-│   └── telemetry/          # Telemetry Processing
-└── tools/                   # Build & Publish Scripts
+├── apps/                        # Applications
+│   ├── api/                    # Main REST API (NestJS)
+│   ├── dashboard/              # Web Dashboard (Next.js 14)
+│   ├── mqtt-gateway/           # MQTT-to-Cloud Bridge
+│   └── cli/                    # Command Line Interface
+├── libs/                        # Publishable NPM Libraries
+│   ├── core/                   # @fleetforgeio/core
+│   ├── database/               # @fleetforgeio/database
+│   ├── security/               # @fleetforgeio/security
+│   ├── ai/                     # @fleetforgeio/ai
+│   ├── ota/                    # @fleetforgeio/ota
+│   ├── digital-twin/           # @fleetforgeio/digital-twin
+│   ├── aws-integration/        # @fleetforgeio/aws-integration
+│   ├── azure-integration/      # @fleetforgeio/azure-integration
+│   └── gcp-integration/        # @fleetforgeio/gcp-integration
+└── tools/                       # Scripts & Device Simulator
 ```
 
 ### Technology Stack
@@ -72,7 +77,7 @@ FleetForge/
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/FleetForge.git
+git clone https://github.com/virgilhawkins00/FleetForge.git
 cd FleetForge
 
 # Install dependencies
@@ -103,39 +108,45 @@ nx serve ai-service
 
 ---
 
-## 📦 NPM Libraries
+## 📦 NPM Packages
 
-FleetForge provides reusable libraries for device integration:
+FleetForge provides modular, publishable NPM packages under the `@fleetforgeio` organization:
 
-### @fleetforge/core
+| Package                                                                                    | Description                                 | Install                            |
+| ------------------------------------------------------------------------------------------ | ------------------------------------------- | ---------------------------------- |
+| **[@fleetforgeio/core](https://www.npmjs.com/package/@fleetforgeio/core)**                 | Domain entities, interfaces, shared types   | `npm i @fleetforgeio/core`         |
+| **[@fleetforgeio/database](https://www.npmjs.com/package/@fleetforgeio/database)**         | MongoDB repositories, schemas, mappers      | `npm i @fleetforgeio/database`     |
+| **[@fleetforgeio/security](https://www.npmjs.com/package/@fleetforgeio/security)**         | JWT, Guards, Digital Signatures, Encryption | `npm i @fleetforgeio/security`     |
+| **[@fleetforgeio/ai](https://www.npmjs.com/package/@fleetforgeio/ai)**                     | Anomaly detection, Predictive maintenance   | `npm i @fleetforgeio/ai`           |
+| **[@fleetforgeio/ota](https://www.npmjs.com/package/@fleetforgeio/ota)**                   | OTA updates, Delta updates, Rollback        | `npm i @fleetforgeio/ota`          |
+| **[@fleetforgeio/digital-twin](https://www.npmjs.com/package/@fleetforgeio/digital-twin)** | Shadow state management, Sync engine        | `npm i @fleetforgeio/digital-twin` |
 
-Core domain models, entities, and interfaces.
+### ☁️ Cloud Integration Packages
 
-```bash
-npm install @fleetforge/core
-```
+| Package                                                                                              | Cloud Provider | Services                                    |
+| ---------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------- |
+| **[@fleetforgeio/aws-integration](https://www.npmjs.com/package/@fleetforgeio/aws-integration)**     | AWS            | IoT Core, S3, Timestream                    |
+| **[@fleetforgeio/azure-integration](https://www.npmjs.com/package/@fleetforgeio/azure-integration)** | Azure          | IoT Hub, Blob Storage, Data Explorer        |
+| **[@fleetforgeio/gcp-integration](https://www.npmjs.com/package/@fleetforgeio/gcp-integration)**     | GCP            | Pub/Sub, Cloud Storage, BigQuery, Vertex AI |
+
+### Quick Example
 
 ```typescript
-import { Device, DeviceStatus, Location } from '@fleetforge/core';
+import { createAWSModule } from '@fleetforgeio/aws-integration';
+import { createAzureModule } from '@fleetforgeio/azure-integration';
+import { createGCPModule } from '@fleetforgeio/gcp-integration';
 
-const device = new Device(/* ... */);
-device.updateLocation(new Location(-23.5505, -46.6333, new Date()));
-```
+// AWS IoT Core
+const aws = createAWSModule({ iotCore: { region: 'us-east-1' } });
+await aws.iotCore?.createThing('device-001');
 
-### @fleetforge/mqtt-client
+// Azure IoT Hub
+const azure = createAzureModule({ iotHub: { connectionString: '...' } });
+await azure.iotHub?.createDevice('device-001');
 
-MQTT client for device telemetry.
-
-```bash
-npm install @fleetforge/mqtt-client
-```
-
-### @fleetforge/ota-client
-
-OTA update client for devices.
-
-```bash
-npm install @fleetforge/ota-client
+// GCP Pub/Sub
+const gcp = createGCPModule({ pubsub: { projectId: 'my-project' } });
+await gcp.pubsub?.publishTelemetry('topic', { temp: 25.5 });
 ```
 
 ---
@@ -214,4 +225,3 @@ MIT License - see [LICENSE](LICENSE) file for details.
 ---
 
 **Built with ❤️ by the FleetForge Team**
-
