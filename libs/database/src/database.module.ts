@@ -42,6 +42,35 @@ export interface DatabaseModuleOptions {
   options?: MongooseModuleOptions;
 }
 
+/**
+ * Default connection pool and performance options
+ */
+const DEFAULT_MONGOOSE_OPTIONS: MongooseModuleOptions = {
+  // Connection Pool Settings
+  maxPoolSize: 100, // Maximum number of connections in pool
+  minPoolSize: 10, // Minimum number of connections in pool
+  maxIdleTimeMS: 30000, // Close connections idle for 30 seconds
+
+  // Connection Settings
+  connectTimeoutMS: 10000, // Timeout for initial connection
+  socketTimeoutMS: 45000, // Timeout for socket operations
+  serverSelectionTimeoutMS: 5000, // Timeout for server selection
+
+  // Write Concern
+  w: 'majority', // Write to majority of replica set
+  wtimeoutMS: 10000, // Write concern timeout
+
+  // Read Preference (can be overridden per-query)
+  readPreference: 'primaryPreferred',
+
+  // Retry Settings
+  retryWrites: true,
+  retryReads: true,
+
+  // Compression
+  compressors: ['zstd', 'zlib'],
+};
+
 const SCHEMAS = [
   { name: DeviceModel.name, schema: DeviceSchema },
   { name: DeviceShadowModel.name, schema: DeviceShadowSchema },
@@ -77,6 +106,7 @@ export class DatabaseModule {
       module: DatabaseModule,
       imports: [
         MongooseModule.forRoot(options.uri, {
+          ...DEFAULT_MONGOOSE_OPTIONS,
           ...options.options,
         }),
         MongooseModule.forFeature(SCHEMAS),
@@ -103,6 +133,7 @@ export class DatabaseModule {
             const config = await options.useFactory(...args);
             return {
               uri: config.uri,
+              ...DEFAULT_MONGOOSE_OPTIONS,
               ...config.options,
             };
           },

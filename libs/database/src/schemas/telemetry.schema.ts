@@ -83,3 +83,13 @@ TelemetrySchema.index({ deviceId: 1, timestamp: -1 });
 TelemetrySchema.index({ deviceId: 1, receivedAt: -1 });
 // TTL index to auto-delete old telemetry data after 30 days (uses simple timestamp index)
 TelemetrySchema.index({ timestamp: 1 }, { expireAfterSeconds: 2592000, background: true });
+
+// Geospatial index for location-based queries (e.g., find telemetry within a region)
+TelemetrySchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
+
+// Sensor data queries
+TelemetrySchema.index({ deviceId: 1, 'sensors.name': 1, timestamp: -1 });
+
+// Battery/signal monitoring
+TelemetrySchema.index({ deviceId: 1, batteryLevel: 1 }, { sparse: true });
+TelemetrySchema.index({ deviceId: 1, signalStrength: 1 }, { sparse: true });

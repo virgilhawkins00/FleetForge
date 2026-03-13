@@ -189,3 +189,13 @@ DeviceSchema.index({ fleetId: 1, status: 1 });
 DeviceSchema.index({ firmwareVersion: 1, status: 1 });
 DeviceSchema.index({ 'lifecycleTimestamps.activatedAt': 1 });
 DeviceSchema.index({ 'lifecycleTimestamps.decommissionedAt': 1 });
+
+// Geospatial index for location-based queries
+DeviceSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
+
+// Time-based index for lastSeen queries with status
+DeviceSchema.index({ lastSeen: -1, status: 1 });
+
+// Multi-tenant optimization (for queries filtering by organization via fleet)
+DeviceSchema.index({ fleetId: 1, lastSeen: -1 });
+DeviceSchema.index({ fleetId: 1, type: 1 });

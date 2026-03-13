@@ -208,3 +208,14 @@ export const DeploymentSchema = SchemaFactory.createForClass(DeploymentModel);
 // Indexes
 DeploymentSchema.index({ firmwareId: 1, status: 1 });
 DeploymentSchema.index({ status: 1, startedAt: -1 });
+
+// Deployment history queries
+DeploymentSchema.index({ createdBy: 1, createdAt: -1 });
+DeploymentSchema.index({ status: 1, completedAt: -1 });
+
+// Target queries (for finding deployments by fleet or device)
+DeploymentSchema.index({ 'config.target.fleetIds': 1, status: 1 });
+DeploymentSchema.index({ 'config.target.deviceIds': 1, status: 1 });
+
+// Scheduled deployments
+DeploymentSchema.index({ 'config.scheduledAt': 1, status: 1 }, { sparse: true });
