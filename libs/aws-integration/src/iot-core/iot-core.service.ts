@@ -76,9 +76,9 @@ export class IoTCoreService {
       }),
     );
     return {
-      thingName: response.thingName!,
-      thingId: response.thingId!,
-      thingArn: response.thingArn!,
+      thingName: response.thingName ?? '',
+      thingId: response.thingId ?? '',
+      thingArn: response.thingArn ?? '',
       thingTypeName: registration.thingTypeName,
       attributes: registration.attributes || {},
       version: 1,
@@ -89,9 +89,9 @@ export class IoTCoreService {
     try {
       const response = await this.iotClient.send(new DescribeThingCommand({ thingName }));
       return {
-        thingName: response.thingName!,
-        thingId: response.thingId!,
-        thingArn: response.thingArn!,
+        thingName: response.thingName ?? '',
+        thingId: response.thingId ?? '',
+        thingArn: response.thingArn ?? '',
         thingTypeName: response.thingTypeName,
         attributes: response.attributes || {},
         version: response.version || 1,
@@ -122,9 +122,9 @@ export class IoTCoreService {
     const response = await this.iotClient.send(new ListThingsCommand({ maxResults, nextToken }));
     return {
       things: (response.things || []).map((t) => ({
-        thingName: t.thingName!,
+        thingName: t.thingName ?? '',
         thingId: '',
-        thingArn: t.thingArn!,
+        thingArn: t.thingArn ?? '',
         thingTypeName: t.thingTypeName,
         attributes: t.attributes || {},
         version: t.version || 1,
@@ -214,8 +214,8 @@ export class IoTCoreService {
       new CreateThingGroupCommand({ thingGroupName: groupName, parentGroupName }),
     );
     return {
-      groupName: response.thingGroupName!,
-      groupArn: response.thingGroupArn!,
+      groupName: response.thingGroupName ?? '',
+      groupArn: response.thingGroupArn ?? '',
     };
   }
 
@@ -228,8 +228,8 @@ export class IoTCoreService {
   async listThingGroups(): Promise<{ groupName: string; groupArn: string }[]> {
     const response = await this.iotClient.send(new ListThingGroupsCommand({}));
     return (response.thingGroups || []).map((g) => ({
-      groupName: g.groupName!,
-      groupArn: g.groupArn!,
+      groupName: g.groupName ?? '',
+      groupArn: g.groupArn ?? '',
     }));
   }
 
