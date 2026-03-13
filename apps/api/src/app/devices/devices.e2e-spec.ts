@@ -29,8 +29,10 @@ describe('Devices E2E - Protected Routes', () => {
     lastName: 'User',
   };
 
+  // Increase timeout for MongoDB Memory Server startup
+  jest.setTimeout(60000);
+
   beforeAll(async () => {
-    jest.setTimeout(30000);
     mongod = await MongoMemoryServer.create();
     const mongoUri = mongod.getUri();
 
