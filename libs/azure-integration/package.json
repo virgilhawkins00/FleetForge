@@ -1,0 +1,26 @@
+{
+  "name": "@fleetforge/azure-integration",
+  "version": "0.1.0",
+  "description": "Azure IoT integration for FleetForge - IoT Hub, Blob Storage, Data Explorer",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@azure/identity": "^4.0.0",
+    "@azure/iothub": "^1.1.0",
+    "@azure/storage-blob": "^12.0.0",
+    "@azure/data-tables": "^13.0.0"
+  },
+  "keywords": [
+    "azure",
+    "iot-hub",
+    "blob-storage",
+    "data-explorer",
+    "fleetforge",
+    "iot"
+  ]
+}
+
