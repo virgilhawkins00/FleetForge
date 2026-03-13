@@ -28,6 +28,12 @@ export interface BigQueryConfig extends GCPConfig {
   analyticsTable?: string;
 }
 
+export interface VertexAIConfig extends GCPConfig {
+  model?: string; // Default: gemini-1.5-flash
+  maxTokens?: number;
+  temperature?: number;
+}
+
 export interface TelemetryMessage {
   deviceId: string;
   fleetId?: string;
@@ -76,5 +82,8 @@ export interface SubscriptionOptions {
   };
 }
 
-export type MessageHandler<T> = (message: T, ackFn: () => void, nackFn: () => void) => Promise<void>;
-
+export type MessageHandler<T> = (
+  message: T,
+  ackFn: () => void,
+  nackFn: () => void,
+) => Promise<void>;

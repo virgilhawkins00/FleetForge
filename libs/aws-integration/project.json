@@ -1,0 +1,35 @@
+{
+  "name": "aws-integration",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/aws-integration/src",
+  "projectType": "library",
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/aws-integration",
+        "main": "libs/aws-integration/src/index.ts",
+        "tsConfig": "libs/aws-integration/tsconfig.lib.json",
+        "assets": ["libs/aws-integration/*.md"]
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"],
+      "options": {
+        "lintFilePatterns": ["libs/aws-integration/**/*.ts"]
+      }
+    },
+    "test": {
+      "executor": "@nx/jest:jest",
+      "outputs": ["{workspaceRoot}/coverage/libs/aws-integration"],
+      "options": {
+        "jestConfig": "libs/aws-integration/jest.config.ts",
+        "passWithNoTests": true
+      }
+    }
+  },
+  "tags": ["scope:libs", "type:integration", "cloud:aws"]
+}
+

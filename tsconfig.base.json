@@ -29,6 +29,7 @@
     "paths": {
       "@/*": ["apps/dashboard/*"],
       "@fleetforge/ai": ["libs/ai/src/index.ts"],
+      "@fleetforge/aws-integration": ["libs/aws-integration/src/index.ts"],
       "@fleetforge/cli": ["apps/cli/src/index.ts"],
       "@fleetforge/core": ["libs/core/src/index.ts"],
       "@fleetforge/database": ["libs/database/src/index.ts"],
