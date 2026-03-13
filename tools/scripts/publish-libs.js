@@ -16,6 +16,8 @@ const LIBS_TO_PUBLISH = [
   'sdk',
   'security',
   'telemetry',
+  'aws-integration',
+  'azure-integration',
 ];
 
 const isDryRun = process.argv.includes('--dry-run');
@@ -119,4 +121,3 @@ function main() {
 }
 
 main();
-

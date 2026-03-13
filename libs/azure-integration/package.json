@@ -1,5 +1,5 @@
 {
-  "name": "@fleetforge/azure-integration",
+  "name": "@fleetforgeio/azure-integration",
   "version": "0.1.0",
   "description": "Azure IoT integration for FleetForge - IoT Hub, Blob Storage, Data Explorer",
   "main": "./src/index.js",
@@ -23,4 +23,3 @@
     "iot"
   ]
 }
-
